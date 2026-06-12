@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<!--
+  SEÑAL — informativo diario por voz (DEMO LOCAL)
+  ------------------------------------------------
+  · Un solo archivo, sin backend. Listo para GitHub Pages (igual que Scalp).
+  · Las noticias son de EJEMPLO (constante DATA). La narrativa se arma con
+    reglas simples (sin IA): conectores, contexto, fuentes y balance emocional.
+  · La voz usa Web Speech API (gratis, en el navegador).
+  · Para cambiar el nombre: edita la constante NOMBRE más abajo.
+  · Offline real (service worker) se añade al desplegar, con un sw.js aparte.
+-->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#181512">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Lo Esencial">
+<title>Lo Esencial</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23181512'/%3E%3Cg fill='%23F0A33C'%3E%3Crect x='52' y='86' width='10' height='28' rx='5'/%3E%3Crect x='70' y='66' width='10' height='68' rx='5'/%3E%3Crect x='88' y='44' width='10' height='112' rx='5'/%3E%3Crect x='106' y='70' width='10' height='60' rx='5'/%3E%3Crect x='124' y='90' width='10' height='20' rx='5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Lo%20Esencial%22%2C%22short_name%22%3A%22Lo%20Esencial%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23181512%22%2C%22theme_color%22%3A%22%23181512%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520180%2520180%2527%253E%253Crect%2520width%253D%2527180%2527%2520height%253D%2527180%2527%2520rx%253D%252740%2527%2520fill%253D%2527%2523181512%2527%252F%253E%253Cg%2520fill%253D%2527%2523F0A33C%2527%253E%253Crect%2520x%253D%252788%2527%2520y%253D%252744%2527%2520width%253D%252710%2527%2520height%253D%2527112%2527%2520rx%253D%25275%2527%252F%253E%253C%252Fg%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+<style>
+  :root{
+    --ink:#181512;        /* fondo cálido casi negro (estudio) */
+    --panel:#211C16;      /* superficie elevada */
+    --panel-2:#2A241C;
+    --paper:#ECE6D9;      /* texto principal, blanco cálido */
+    --muted:#9A9081;      /* etiquetas, datos */
+    --faint:#5E574C;      /* hairlines */
+    --signal:#F0A33C;     /* la señal: ámbar / luz de amanecer */
+    --pos:#86B392;        /* tono positivo */
+    --neu:#C9C0AE;        /* tono neutro */
+    --neg:#C77B5A;        /* tono negativo */
+    --serif: Georgia, 'Times New Roman', serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; background:var(--ink); color:var(--paper);}
+  body{
+    font-family:var(--serif);
+    line-height:1.62;
+    padding:max(env(safe-area-inset-top),18px) 0 120px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:680px; margin:0 auto; padding:0 22px;}
+
+  /* ---------- utilidades tipográficas ---------- */
+  .eyebrow{
+    font-family:var(--sans); font-size:11px; font-weight:700;
+    letter-spacing:.18em; text-transform:uppercase; color:var(--muted);
+  }
+  .data{font-family:var(--sans); font-size:12.5px; color:var(--muted); letter-spacing:.02em;}
+
+  /* ---------- cabecera ---------- */
+  header{display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-bottom:4px;}
+  .masthead{
+    font-family:var(--sans); font-weight:800; font-size:30px;
+    letter-spacing:.16em; text-transform:uppercase; margin:0;
+  }
+  .masthead b{color:var(--signal); font-weight:800;}
+  .sub{margin:2px 0 22px; color:var(--muted);}
+
+  /* ---------- consola de señal (hero / firma) ---------- */
+  .console{
+    background:linear-gradient(180deg,var(--panel),var(--ink));
+    border:1px solid var(--faint); border-radius:18px;
+    padding:22px 20px 18px; margin-bottom:14px;
+  }
+  .wave{display:flex; align-items:center; gap:4px; height:54px; margin-bottom:18px;}
+  .wave i{
+    flex:1; background:var(--signal); border-radius:3px; height:14%;
+    opacity:.55; transform-origin:center;
+  }
+  body.playing .wave i{animation:bar 900ms ease-in-out infinite;}
+  @keyframes bar{0%,100%{transform:scaleY(.18); opacity:.5;} 50%{transform:scaleY(1); opacity:1;}}
+  .controls{display:flex; align-items:center; gap:16px;}
+  .play{
+    width:62px; height:62px; flex:0 0 auto; border-radius:50%;
+    border:1.5px solid var(--signal); background:var(--signal); color:var(--ink);
+    font-size:24px; cursor:pointer; display:grid; place-items:center;
+    transition:transform .12s ease;
+  }
+  .play:active{transform:scale(.94);}
+  .play.paused{background:transparent; color:var(--signal);}
+  .nowmeta{flex:1; min-width:0;}
+  .nowmeta .t1{font-family:var(--sans); font-size:15px; font-weight:600;}
+  .nowmeta .t2{margin-top:2px;}
+
+  /* ---------- tono del día ---------- */
+  .tono{margin:18px 0 6px;}
+  .tonobar{display:flex; height:8px; border-radius:6px; overflow:hidden; margin:8px 0 7px; background:var(--panel-2);}
+  .tonobar span{display:block;}
+  .tonolegend{display:flex; gap:16px;}
+  .tonolegend i{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:-1px;}
+
+  /* ---------- guion / subtítulos ---------- */
+  .script{margin-top:26px;}
+  .seg{padding:14px 0; border-top:1px solid var(--faint); cursor:pointer; transition:opacity .25s ease;}
+  .seg:first-child{border-top:none;}
+  .seg .head{display:flex; align-items:center; gap:10px; margin-bottom:7px;}
+  .seg .dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .seg .body{font-size:19px;}
+  .seg .ctx{font-size:16px; color:var(--muted); font-style:italic; margin-top:8px;}
+  .seg .src{font-family:var(--sans); font-size:11.5px; letter-spacing:.04em; color:var(--muted); margin-top:10px;}
+  .seg.special .body{font-family:var(--sans); font-weight:500; font-size:17.5px;}
+  .seg.live{opacity:1;}
+  .seg.live .marker{color:var(--signal);}
+  .seg.spoken{opacity:.5;}
+  .seg .marker{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);}
+
+  /* ---------- ajustes ---------- */
+  .gear{
+    position:fixed; right:18px; bottom:calc(22px + env(safe-area-inset-bottom));
+    width:54px; height:54px; border-radius:50%; border:1px solid var(--faint);
+    background:var(--panel); color:var(--paper); font-size:22px; cursor:pointer; z-index:30;
+    box-shadow:0 6px 22px rgba(0,0,0,.4);
+  }
+  .sheet-bg{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s;}
+  .sheet-bg.open{opacity:1; pointer-events:auto;}
+  .sheet{
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    background:var(--panel); border-top-left-radius:22px; border-top-right-radius:22px;
+    border-top:1px solid var(--faint); padding:8px 0 calc(26px + env(safe-area-inset-bottom));
+    transform:translateY(102%); transition:transform .3s cubic-bezier(.2,.8,.2,1); max-height:86vh; overflow:auto;
+  }
+  .sheet.open{transform:translateY(0);}
+  .grip{width:40px; height:4px; background:var(--faint); border-radius:3px; margin:10px auto 6px;}
+  .sheet .wrap{padding:0 22px;}
+  .sheet h2{font-family:var(--sans); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:22px 0 12px; font-weight:700;}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid rgba(94,87,76,.45);}
+  .row:first-of-type{border-top:none;}
+  .row label{font-family:var(--sans); font-size:15px;}
+  .row .hint{font-family:var(--sans); font-size:12px; color:var(--muted); margin-top:2px;}
+  /* switch */
+  .sw{width:46px; height:27px; border-radius:16px; background:var(--panel-2); border:1px solid var(--faint); position:relative; flex:0 0 auto; cursor:pointer; transition:background .2s;}
+  .sw::after{content:""; position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%; background:var(--muted); transition:transform .2s, background .2s;}
+  .sw.on{background:rgba(240,163,60,.25); border-color:var(--signal);}
+  .sw.on::after{transform:translateX(19px); background:var(--signal);}
+  /* chips */
+  .chips{display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 2px;}
+  .chip{font-family:var(--sans); font-size:13px; padding:8px 13px; border-radius:20px; border:1px solid var(--faint); background:transparent; color:var(--muted); cursor:pointer;}
+  .chip.on{border-color:var(--signal); color:var(--signal); background:rgba(240,163,60,.12);}
+  /* segmented */
+  .seg-ctrl{display:flex; gap:6px; flex-wrap:wrap;}
+  .seg-ctrl button{font-family:var(--sans); font-size:13px; padding:8px 12px; border-radius:11px; border:1px solid var(--faint); background:transparent; color:var(--muted); cursor:pointer;}
+  .seg-ctrl button.on{border-color:var(--signal); color:var(--ink); background:var(--signal);}
+  select.dur{font-family:var(--sans); font-size:15px; background:var(--panel-2); color:var(--paper); border:1px solid var(--faint); border-radius:11px; padding:9px 12px;}
+  .vnote{font-family:var(--sans); font-size:12.5px; line-height:1.5; color:var(--muted); background:var(--panel-2); border:1px solid var(--faint); border-radius:12px; padding:11px 13px; margin:2px 0 12px;}
+  .vnote b{color:var(--paper); font-weight:600;}
+
+  @media (prefers-reduced-motion: reduce){
+    body.playing .wave i{animation:none; transform:scaleY(.5); opacity:.8;}
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1 class="masthead">Lo <b>Esencial</b></h1>
+      <span class="data" id="fecha"></span>
+    </header>
+    <p class="sub">El informativo del día — lo que ha pasado, sin el ruido.</p>
+
+    <!-- consola -->
+    <section class="console">
+      <div class="wave" id="wave"></div>
+      <div class="controls">
+        <button class="play paused" id="play" aria-label="Reproducir">▶</button>
+        <div class="nowmeta">
+          <div class="t1" id="nowTitle">Informativo listo</div>
+          <div class="t2 data" id="nowMeta"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- tono del día -->
+    <div class="tono">
+      <span class="eyebrow">Tono del día</span>
+      <div class="tonobar" id="tonobar"></div>
+      <div class="tonolegend data" id="tonolegend"></div>
+    </div>
+
+    <!-- guion -->
+    <section class="script" id="script"></section>
+  </div>
+
+  <button class="gear" id="gear" aria-label="Ajustes">⚙</button>
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet" id="sheet">
+    <div class="grip"></div>
+    <div class="wrap">
+      <h2>Duración</h2>
+      <div class="row">
+        <div><label>Minutos del informativo</label></div>
+        <select class="dur" id="dur">
+          <option value="1">1 min</option><option value="3">3 min</option>
+          <option value="5" selected>5 min</option><option value="10">10 min</option>
+          <option value="15">15 min</option><option value="20">20 min</option>
+        </select>
+      </div>
+
+      <h2>Intereses</h2>
+      <div class="chips" id="chips"></div>
+
+      <h2>Filtros</h2>
+      <div class="row">
+        <div><label>No me amargues la mañana</label><div class="hint">Oculta conflictos, sucesos y política tóxica.</div></div>
+        <div class="sw" data-flag="noAmargues"></div>
+      </div>
+      <div class="row">
+        <div><label>Sólo lo importante</label><div class="hint">Hoy, las 3 cosas que de verdad importan.</div></div>
+        <div class="sw" data-flag="soloImportante"></div>
+      </div>
+      <div class="row">
+        <div><label>Velocidad inteligente</label><div class="hint">Lo ligero, rápido. Lo complejo, más despacio.</div></div>
+        <div class="sw on" data-flag="velInteligente"></div>
+      </div>
+
+      <h2>Voz del dispositivo</h2>
+      <div class="vnote" id="vnote"></div>
+      <div class="row" style="border:none;">
+        <div style="flex:1"><label for="voiceSel">Voz del sistema</label></div>
+        <select class="dur" id="voiceSel" style="max-width:62%"></select>
+      </div>
+
+      <h2>Tono de la locución</h2>
+      <div class="row" style="border:none; padding-bottom:4px;">
+        <div class="seg-ctrl" id="tono">
+          <button data-tono="serio">Serio</button>
+          <button data-tono="calmado" class="on">Calmado</button>
+          <button data-tono="analitico">Analítico</button>
+          <button data-tono="ligero">Ligero</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+"use strict";
+
+/* ====== NOMBRE (cámbialo aquí) ====== */
+const NOMBRE = "Lo Esencial";
+
+/* ====== datos de EJEMPLO (placeholder) ====== */
+/* tono: positiva | neutra | negativa · peso: light | heavy (para la voz) */
+const DATA = [
+  { id:"sc1", tema:"ciencia", tono:"positiva", peso:"heavy", rel:95,
+    texto:"Un equipo internacional ha logrado mantener estable un material superconductor a temperaturas mucho más altas de lo habitual, un paso que la física llevaba años persiguiendo. Si se confirma a gran escala, podría cambiar desde el transporte de energía hasta la computación. De momento, conviene la calma: es un avance sólido, todavía no una revolución de bolsillo.",
+    ctx:"La superconductividad permite transmitir electricidad sin pérdidas, pero hasta ahora exigía un frío extremo difícil de mantener fuera de un laboratorio.",
+    fuentes:["Nature","Reuters"] },
+  { id:"ec1", tema:"economia", tono:"neutra", peso:"heavy", rel:82,
+    texto:"El banco central mantuvo los tipos de interés sin cambios, en línea con lo esperado. La decisión busca ganar tiempo para ver si la inflación sigue cediendo antes de mover ficha.",
+    ctx:"Los tipos de interés encarecen o abaratan el crédito: subirlos enfría el consumo, bajarlos lo estimula.",
+    fuentes:["Bloomberg","Reuters"] },
+  { id:"in1", tema:"internacional", tono:"negativa", peso:"heavy", rel:88,
+    texto:"Continúan los choques en la frontera de la región, sin acuerdo a la vista pese a la mediación internacional. Las cifras de personas desplazadas vuelven a subir.",
+    cont:"Esto viene de la escalada que arrancó hace dos semanas.",
+    fuentes:["BBC","Associated Press","Reuters"] },
+  { id:"tc1", tema:"tecnologia", tono:"neutra", peso:"light", rel:70,
+    texto:"Una de las grandes tecnológicas presentó la nueva versión de su sistema operativo. Trae mejoras de eficiencia y algún cambio de diseño, sin el terremoto que anunciaban los titulares. En la práctica: irá algo más rápido y tendrás que reubicar un par de botones.",
+    fuentes:["The Verge","Associated Press"] },
+  { id:"ma1", tema:"medioambiente", tono:"positiva", peso:"heavy", rel:67,
+    texto:"Un informe registra el mayor avance anual en energía renovable instalada hasta la fecha, con la solar a la cabeza. La transición avanza más rápido de lo que sugieren las discusiones diarias.",
+    fuentes:["AIE","The Guardian"] },
+  { id:"ga1", tema:"galicia", tono:"neutra", peso:"light", rel:60,
+    texto:"En Vigo, el plan para reorganizar las líneas de Vitrasa entra en su fase de alegaciones: hay cambios de recorrido en varias zonas y los vecinos tienen un mes para opinar. Traducción: revisa tu parada antes de darla por sentada.",
+    fuentes:["Faro de Vigo"] },
+  { id:"cu1", tema:"cultura", tono:"positiva", peso:"light", rel:58,
+    texto:"Una novela traducida del coreano se ha convertido en el fenómeno editorial del mes, agotando ediciones antes incluso de las reseñas. A veces el boca a boca todavía le gana la partida a la maquinaria de marketing.",
+    fuentes:["El País"] },
+  { id:"de1", tema:"deportes", tono:"neutra", peso:"light", rel:48,
+    texto:"Jornada tranquila de liga, con un único resultado que mueve la tabla por arriba. Nada que no se pueda resumir en una frase, así que ya está resumido.",
+    fuentes:["Marca"] }
+];
+
+const TEMAS = {
+  ciencia:"Ciencia", tecnologia:"Tecnología", economia:"Economía",
+  cultura:"Cultura", medioambiente:"Medio ambiente", deportes:"Deportes",
+  internacional:"Internacional", galicia:"Galicia / Vigo"
+};
+const HIDE = new Set(["internacional","politica","sucesos"]);
+const TONO_COLOR = { positiva:"var(--pos)", neutra:"var(--neu)", negativa:"var(--neg)" };
+const TONO_LABEL = { positiva:"Positiva", neutra:"Neutra", negativa:"Negativa" };
+const DUR_BLOCKS = { 1:1, 3:2, 5:3, 10:5, 15:7, 20:8 };
+const CONNECTORS = ["", "Cambiamos de tema.", "En otro orden de cosas.", "Seguimos.", "Mientras tanto.", "Y antes de cerrar,"];
+
+/* ====== estado + persistencia (a prueba de sandbox) ====== */
+const store = {
+  get(k,f){ try{ const v=localStorage.getItem(k); return v==null?f:JSON.parse(v);}catch(e){return f;} },
+  set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+};
+const cfg = store.get("senal_cfg", {
+  dur:5, noAmargues:false, soloImportante:false, velInteligente:true,
+  tono:"calmado", voiceURI:"", intereses:["ciencia","tecnologia","economia","cultura","medioambiente","galicia"]
+});
+
+/* ====== generación del guion (reglas, sin IA) ====== */
+function generarGuion(){
+  let items = DATA.filter(n => cfg.intereses.includes(n.tema));
+  if(cfg.noAmargues) items = items.filter(n => !HIDE.has(n.tema) && n.tono!=="negativa");
+  items.sort((a,b)=>b.rel-a.rel);
+  let n = DUR_BLOCKS[cfg.dur] || 3;
+  if(cfg.soloImportante) n = Math.min(n,3);
+  items = items.slice(0,n);
+
+  const cuenta = {positiva:0,neutra:0,negativa:0};
+  items.forEach(i=>cuenta[i.tono]++);
+
+  const firma = `Buenos días. ${fechaLarga()}. Esto es ${NOMBRE}: lo que ha pasado hoy, contado en ${cfg.dur} ${cfg.dur===1?"minuto":"minutos"} y sin el ruido de costumbre.`;
+  const dominante = Object.keys(cuenta).sort((a,b)=>cuenta[b]-cuenta[a])[0] || "neutra";
+  let resumen = `El balance del día es mayormente ${TONO_LABEL[dominante].toLowerCase()}: ${cuenta.positiva} positivas, ${cuenta.neutra} neutras y ${cuenta.negativa} negativas.`;
+  if(cfg.noAmargues) resumen += " Hoy te hemos ahorrado lo más áspero.";
+  const cierre = "Y hasta aquí. Mañana habrá más, aunque probablemente menos de lo que parezca. Que tengas buen día.";
+
+  return { firma, items, resumen, cierre, cuenta };
+}
+
+/* ====== render ====== */
+const $ = s => document.querySelector(s);
+let SEGMENTS = []; // {el, text, rate}
+
+function tasaPara(item){
+  const base = { serio:0.95, calmado:0.93, analitico:1.0, ligero:1.06 }[cfg.tono] || 0.95;
+  if(!cfg.velInteligente || !item) return base;
+  return item.peso==="heavy" ? base*0.9 : base*1.08;
+}
+
+function render(){
+  const g = generarGuion();
+  const script = $("#script"); script.innerHTML = ""; SEGMENTS = [];
+
+  const add = (html, text, rate, cls="") => {
+    const el = document.createElement("div");
+    el.className = "seg " + cls;
+    el.innerHTML = html;
+    el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
+    script.appendChild(el);
+    const seg = { el, text, rate };
+    SEGMENTS.push(seg);
+    return seg;
+  };
+
+  // firma
+  add(`<div class="head"><span class="marker">Apertura</span></div><div class="body">${g.firma}</div>`,
+      g.firma, tasaPara(null), "special");
+
+  // bloques
+  g.items.forEach((it,idx)=>{
+    const conn = CONNECTORS[idx % CONNECTORS.length];
+    const contPrefix = it.cont ? `${it.cont} ` : "";
+    const spoken = `${conn? conn+" ":""}${contPrefix}${it.texto}${it.ctx? " "+it.ctx : ""}`;
+    let html = `<div class="head">
+        <span class="dot" style="background:${TONO_COLOR[it.tono]}"></span>
+        <span class="marker">${TEMAS[it.tema]||it.tema}</span></div>
+        <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${it.texto}</div>`;
+    if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
+    html += `<div class="src">Contrastado en ${listar(it.fuentes)}.</div>`;
+    add(html, spoken, tasaPara(it));
+  });
+
+  // resumen emocional
+  add(`<div class="head"><span class="marker">Balance</span></div><div class="body">${g.resumen}</div>`,
+      g.resumen, tasaPara(null), "special");
+  // cierre
+  add(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
+      g.cierre, tasaPara(null), "special");
+
+  // tono del día
+  renderTono(g.cuenta, g.items.length);
+
+  // meta
+  const palabras = SEGMENTS.reduce((a,s)=>a+s.text.split(/\s+/).length,0);
+  const mins = Math.max(1, Math.round(palabras/150));
+  $("#nowMeta").textContent = `${g.items.length} ${g.items.length===1?"bloque":"bloques"} · ≈ ${mins} min · es-ES`;
+  $("#nowTitle").textContent = "Informativo listo";
+
+  stop(); // resetea reproducción al regenerar
+}
+
+function renderTono(c, total){
+  const bar = $("#tonobar"), leg = $("#tonolegend");
+  bar.innerHTML = ""; leg.innerHTML = "";
+  const t = total||1;
+  ["positiva","neutra","negativa"].forEach(k=>{
+    if(!c[k]) return;
+    const s = document.createElement("span");
+    s.style.width = (c[k]/t*100)+"%"; s.style.background = TONO_COLOR[k];
+    bar.appendChild(s);
+    leg.insertAdjacentHTML("beforeend",
+      `<span><i style="background:${TONO_COLOR[k]}"></i>${TONO_LABEL[k]} ${c[k]}</span>`);
+  });
+}
+
+function listar(a){ return a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ")+" y "+a[a.length-1]; }
+function fechaLarga(){
+  return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+}
+
+/* ====== voz (Web Speech) ====== */
+let voices = [], voz = null, idx = -1, queue = [], qi = 0, playing = false;
+
+function elegirVozPorDefecto(){
+  const es = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
+  const pool = es.length ? es : voices;
+  return pool.find(v=>/enhanced|mejorad|premium|siri|natural|neural|google/i.test(v.name))
+      || pool.find(v=>v.lang==="es-ES") || pool[0] || null;
+}
+function cargarVoces(){
+  voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  voz = (cfg.voiceURI && voices.find(v=>v.voiceURI===cfg.voiceURI)) || elegirVozPorDefecto();
+  poblarSelectorVoces();
+}
+if(window.speechSynthesis){ cargarVoces(); speechSynthesis.onvoiceschanged = cargarVoces; }
+
+function setLive(i){
+  SEGMENTS.forEach((s,k)=>{
+    s.el.classList.toggle("live", k===i);
+    s.el.classList.toggle("spoken", k>-1 && k<i);
+  });
+  if(i>=0 && SEGMENTS[i]) SEGMENTS[i].el.scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+// trocea por frases (más estable en iOS)
+function construirCola(){
+  queue = [];
+  SEGMENTS.forEach((s,si)=>{
+    const frases = s.text.match(/[^.!?]+[.!?]*/g) || [s.text];
+    frases.forEach((f,fi,arr)=> queue.push({seg:si, text:f.trim(), rate:s.rate, last:fi===arr.length-1}));
+  });
+}
+
+function play(){
+  if(!window.speechSynthesis){ $("#nowTitle").textContent="Tu navegador no soporta voz"; return; }
+  if(playing) return;
+  if(qi===0 || qi>=queue.length){ construirCola(); qi=0; }
+  playing = true;
+  document.body.classList.add("playing");
+  $("#play").classList.remove("paused"); $("#play").textContent="❚❚";
+  $("#nowTitle").textContent = NOMBRE+" en directo";
+  speakNext();
+}
+
+function speakNext(){
+  if(!playing) return;
+  if(qi>=queue.length){ stop(); return; }
+  const chunk = queue[qi];
+  if(chunk.seg!==idx){ idx=chunk.seg; setLive(idx); }
+  const u = new SpeechSynthesisUtterance(chunk.text);
+  if(voz){ u.voice=voz; u.lang=voz.lang||"es-ES"; } else u.lang="es-ES";
+  u.rate=chunk.rate; u.pitch = (cfg.tono==="ligero"?1.05:cfg.tono==="serio"?0.95:1.0);
+  u.onend = ()=>{ qi++; speakNext(); };
+  u.onerror = ()=>{ qi++; speakNext(); };
+  speechSynthesis.speak(u);
+}
+
+function pause(){
+  playing=false;
+  if(window.speechSynthesis) speechSynthesis.cancel(); // iOS no respeta pause() fiable -> cancel y retomamos por chunk
+  document.body.classList.remove("playing");
+  $("#play").classList.add("paused"); $("#play").textContent="▶";
+  $("#nowTitle").textContent="En pausa";
+}
+
+function stop(){
+  playing=false; qi=0; idx=-1;
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  setLive(-1);
+  document.body.classList.remove("playing");
+  $("#play").classList.add("paused"); $("#play").textContent="▶";
+  if($("#nowTitle").textContent!=="Informativo listo") $("#nowTitle").textContent="Informativo listo";
+}
+
+function jumpTo(i){
+  if(i<0) return;
+  construirCola();
+  qi = queue.findIndex(c=>c.seg===i);
+  if(qi<0) qi=0;
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  playing=false; play();
+}
+
+/* ====== ondas (visual) ====== */
+(function(){
+  const w=$("#wave"); let h="";
+  for(let i=0;i<42;i++){ h+=`<i style="animation-delay:${(i*55)%900}ms"></i>`; }
+  w.innerHTML=h;
+})();
+
+/* ====== ajustes UI ====== */
+const sheet=$("#sheet"), bg=$("#sheetBg");
+function openSheet(){ sheet.classList.add("open"); bg.classList.add("open"); }
+function closeSheet(){ sheet.classList.remove("open"); bg.classList.remove("open"); }
+$("#gear").onclick=openSheet; bg.onclick=closeSheet;
+
+// duración
+const durSel=$("#dur"); durSel.value=cfg.dur;
+durSel.onchange=()=>{ cfg.dur=+durSel.value; save(); render(); };
+
+// intereses (chips)
+const chips=$("#chips");
+Object.keys(TEMAS).forEach(k=>{
+  const b=document.createElement("button");
+  b.className="chip"+(cfg.intereses.includes(k)?" on":"");
+  b.textContent=TEMAS[k];
+  b.onclick=()=>{
+    const i=cfg.intereses.indexOf(k);
+    if(i>=0) cfg.intereses.splice(i,1); else cfg.intereses.push(k);
+    b.classList.toggle("on"); save(); render();
+  };
+  chips.appendChild(b);
+});
+
+// switches
+document.querySelectorAll(".sw").forEach(sw=>{
+  const flag=sw.dataset.flag;
+  sw.classList.toggle("on", !!cfg[flag]);
+  sw.onclick=()=>{ cfg[flag]=!cfg[flag]; sw.classList.toggle("on",cfg[flag]); save(); render(); };
+});
+
+// tono de voz
+document.querySelectorAll("#tono button").forEach(b=>{
+  b.classList.toggle("on", b.dataset.tono===cfg.tono);
+  b.onclick=()=>{
+    cfg.tono=b.dataset.tono;
+    document.querySelectorAll("#tono button").forEach(x=>x.classList.toggle("on",x===b));
+    save(); render();
+  };
+});
+
+// voz del dispositivo: nota por plataforma + selector
+const _ua = navigator.userAgent || "";
+const isIOS = /iPad|iPhone|iPod/.test(_ua) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+const isAndroid = /Android/.test(_ua);
+(function(){
+  const el=$("#vnote"); if(!el) return;
+  if(isIOS) el.innerHTML="<b>Detectado: iPhone/iPad.</b> Para una voz menos robótica: Ajustes → Accesibilidad → Contenido leído → Voces → Español, y descarga una voz <b>Mejorada</b> o <b>Premium</b>. Aviso: Safari a veces la ignora aunque la descargues; si sigue sonando mal, el arreglo de verdad es audio pre-generado.";
+  else if(isAndroid) el.innerHTML="<b>Detectado: Android.</b> Suele sonar mejor que iOS porque usa el motor de Google. Para afinarla: Ajustes → busca <b>“texto a voz”</b> o <b>“síntesis de voz”</b> → motor <b>Speech Services by Google</b> → descarga una voz en español. Luego elígela aquí abajo.";
+  else el.innerHTML="<b>Navegador de escritorio.</b> Elige abajo la voz que mejor suene (en Chrome suelen aparecer las de Google).";
+})();
+
+function poblarSelectorVoces(){
+  const sel=document.querySelector("#voiceSel"); if(!sel) return;
+  const es=voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
+  const lista=es.length?es:voices;
+  if(!lista.length){ sel.innerHTML="<option>Sin voces disponibles aún…</option>"; return; }
+  sel.innerHTML="";
+  lista.forEach(v=>{
+    const o=document.createElement("option");
+    o.value=v.voiceURI; o.textContent=`${v.name} · ${v.lang}`;
+    if(voz && v.voiceURI===voz.voiceURI) o.selected=true;
+    sel.appendChild(o);
+  });
+}
+{ const sel=$("#voiceSel");
+  if(sel) sel.onchange=()=>{ cfg.voiceURI=sel.value; voz=voices.find(v=>v.voiceURI===cfg.voiceURI)||voz; save(); }; }
+poblarSelectorVoces();
+
+function save(){ store.set("senal_cfg", cfg); }
+
+/* ====== arranque ====== */
+$("#fecha").textContent = new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
+$("#play").onclick = ()=> playing ? pause() : play();
+render();
+</script>
+</body>
+</html>
