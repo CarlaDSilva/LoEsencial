@@ -1,163 +1,128 @@
 <!DOCTYPE html>
 <html lang="es">
 <!--
-  SEÑAL — informativo diario por voz (DEMO LOCAL)
-  ------------------------------------------------
-  · Un solo archivo, sin backend. Listo para GitHub Pages (igual que Scalp).
-  · Las noticias son de EJEMPLO (constante DATA). La narrativa se arma con
-    reglas simples (sin IA): conectores, contexto, fuentes y balance emocional.
-  · La voz usa Web Speech API (gratis, en el navegador).
-  · Para cambiar el nombre: edita la constante NOMBRE más abajo.
-  · Offline real (service worker) se añade al desplegar, con un sw.js aparte.
+  LO ESENCIAL — informativo diario por voz (DEMO LOCAL)
+  · Un solo archivo. Súbelo a GitHub Pages tal cual (index.html).
+  · Noticias de EJEMPLO; narrativa por reglas (sin IA). Voz: Web Speech API.
+  · El botón "?" de cada noticia muestra una explicación más a fondo (en la
+    versión real esa explicación se generaría a demanda con IA).
+  · Cambiar el nombre: constante NOMBRE.
 -->
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#181512">
+<meta name="theme-color" content="#E8E2D2">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lo Esencial">
 <title>Lo Esencial</title>
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%23181512'/%3E%3Cg fill='%23F0A33C'%3E%3Crect x='52' y='86' width='10' height='28' rx='5'/%3E%3Crect x='70' y='66' width='10' height='68' rx='5'/%3E%3Crect x='88' y='44' width='10' height='112' rx='5'/%3E%3Crect x='106' y='70' width='10' height='60' rx='5'/%3E%3Crect x='124' y='90' width='10' height='20' rx='5'/%3E%3C/g%3E%3C/svg%3E">
-<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Lo%20Esencial%22%2C%22short_name%22%3A%22Lo%20Esencial%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23181512%22%2C%22theme_color%22%3A%22%23181512%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520viewBox%253D%25270%25200%2520180%2520180%2527%253E%253Crect%2520width%253D%2527180%2527%2520height%253D%2527180%2527%2520rx%253D%252740%2527%2520fill%253D%2527%2523181512%2527%252F%253E%253Cg%2520fill%253D%2527%2523F0A33C%2527%253E%253Crect%2520x%253D%252788%2527%2520y%253D%252744%2527%2520width%253D%252710%2527%2520height%253D%2527112%2527%2520rx%253D%25275%2527%252F%253E%253C%252Fg%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22any%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='38' fill='%23E8E2D2'/%3E%3Cg fill='%237C2436'%3E%3Crect x='52' y='86' width='10' height='28' rx='5'/%3E%3Crect x='70' y='66' width='10' height='68' rx='5'/%3E%3Crect x='88' y='44' width='10' height='112' rx='5'/%3E%3Crect x='106' y='70' width='10' height='60' rx='5'/%3E%3Crect x='124' y='90' width='10' height='20' rx='5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Lo%20Esencial%22%2C%22short_name%22%3A%22Lo%20Esencial%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23E8E2D2%22%2C%22theme_color%22%3A%22%23E8E2D2%22%7D">
 <style>
   :root{
-    --ink:#181512;        /* fondo cálido casi negro (estudio) */
-    --panel:#211C16;      /* superficie elevada */
-    --panel-2:#2A241C;
-    --paper:#ECE6D9;      /* texto principal, blanco cálido */
-    --muted:#9A9081;      /* etiquetas, datos */
-    --faint:#5E574C;      /* hairlines */
-    --signal:#F0A33C;     /* la señal: ámbar / luz de amanecer */
-    --pos:#86B392;        /* tono positivo */
-    --neu:#C9C0AE;        /* tono neutro */
-    --neg:#C77B5A;        /* tono negativo */
-    --serif: Georgia, 'Times New Roman', serif;
-    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --bg:#E8E2D2; --surface:#E1DAC7; --surface2:#D5CDB8;
+    --text:#1B1712; --muted:#6A6051; --line:rgba(27,23,18,.22);
+    --accent:#7C2436;            /* burdeos */
+    --pos:#6C7838; --neu:#8A8170; --neg:#9C5B3B;   /* oliva / gris / siena */
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{margin:0; background:var(--ink); color:var(--paper);}
+  html,body{margin:0;}
   body{
-    font-family:var(--serif);
-    line-height:1.62;
+    font-family:var(--serif); line-height:1.62; color:var(--text);
+    background-color:var(--bg);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
     padding:max(env(safe-area-inset-top),18px) 0 120px;
     -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:680px; margin:0 auto; padding:0 22px;}
-
-  /* ---------- utilidades tipográficas ---------- */
-  .eyebrow{
-    font-family:var(--sans); font-size:11px; font-weight:700;
-    letter-spacing:.18em; text-transform:uppercase; color:var(--muted);
-  }
   .data{font-family:var(--sans); font-size:12.5px; color:var(--muted); letter-spacing:.02em;}
+  .eyebrow{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);}
 
-  /* ---------- cabecera ---------- */
-  header{display:flex; align-items:baseline; justify-content:space-between; gap:14px; margin-bottom:4px;}
-  .masthead{
-    font-family:var(--sans); font-weight:800; font-size:30px;
-    letter-spacing:.16em; text-transform:uppercase; margin:0;
-  }
-  .masthead b{color:var(--signal); font-weight:800;}
-  .sub{margin:2px 0 22px; color:var(--muted);}
+  /* ---------- cabecera tipo periódico ---------- */
+  header{text-align:center; margin-bottom:18px;}
+  .kicker{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--accent); margin-bottom:5px;}
+  .masthead{font-family:var(--serif); font-weight:700; font-size:44px; line-height:1; margin:0 0 9px;}
+  .dateline{display:flex; justify-content:space-between; align-items:center; font-family:var(--sans); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); padding:7px 2px; border-top:1px solid var(--line); border-bottom:3px double var(--text);}
+  .sub{text-align:center; font-style:italic; color:var(--muted); margin:14px 0 22px;}
 
-  /* ---------- consola de señal (hero / firma) ---------- */
-  .console{
-    background:linear-gradient(180deg,var(--panel),var(--ink));
-    border:1px solid var(--faint); border-radius:18px;
-    padding:22px 20px 18px; margin-bottom:14px;
-  }
-  .wave{display:flex; align-items:center; gap:4px; height:54px; margin-bottom:18px;}
-  .wave i{
-    flex:1; background:var(--signal); border-radius:3px; height:14%;
-    opacity:.55; transform-origin:center;
-  }
+  /* ---------- consola ---------- */
+  .console{background:var(--surface); border:1px solid var(--line); border-radius:4px; padding:20px 18px 16px; margin-bottom:16px;}
+  .wave{display:flex; align-items:center; gap:4px; height:50px; margin-bottom:16px;}
+  .wave i{flex:1; background:var(--accent); border-radius:2px; height:14%; opacity:.5; transform-origin:center;}
   body.playing .wave i{animation:bar 900ms ease-in-out infinite;}
-  @keyframes bar{0%,100%{transform:scaleY(.18); opacity:.5;} 50%{transform:scaleY(1); opacity:1;}}
-  .controls{display:flex; align-items:center; gap:16px;}
-  .play{
-    width:62px; height:62px; flex:0 0 auto; border-radius:50%;
-    border:1.5px solid var(--signal); background:var(--signal); color:var(--ink);
-    font-size:24px; cursor:pointer; display:grid; place-items:center;
-    transition:transform .12s ease;
-  }
+  @keyframes bar{0%,100%{transform:scaleY(.18); opacity:.45;} 50%{transform:scaleY(1); opacity:1;}}
+  .controls{display:flex; align-items:center; gap:15px;}
+  .play{width:60px; height:60px; flex:0 0 auto; border-radius:50%; border:1.5px solid var(--accent); background:var(--accent); color:var(--bg); cursor:pointer; display:grid; place-items:center; transition:transform .12s ease;}
   .play:active{transform:scale(.94);}
-  .play.paused{background:transparent; color:var(--signal);}
+  .play.paused{background:transparent; color:var(--accent);}
+  .play svg,.gear svg,.sheet-close svg{display:block;}
   .nowmeta{flex:1; min-width:0;}
   .nowmeta .t1{font-family:var(--sans); font-size:15px; font-weight:600;}
   .nowmeta .t2{margin-top:2px;}
 
   /* ---------- tono del día ---------- */
-  .tono{margin:18px 0 6px;}
-  .tonobar{display:flex; height:8px; border-radius:6px; overflow:hidden; margin:8px 0 7px; background:var(--panel-2);}
+  .tono{margin:16px 0 6px;}
+  .tonobar{display:flex; height:8px; border-radius:2px; overflow:hidden; margin:8px 0 7px; background:var(--surface2);}
   .tonobar span{display:block;}
   .tonolegend{display:flex; gap:16px;}
   .tonolegend i{display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:-1px;}
 
-  /* ---------- guion / subtítulos ---------- */
-  .script{margin-top:26px;}
-  .seg{padding:14px 0; border-top:1px solid var(--faint); cursor:pointer; transition:opacity .25s ease;}
+  /* ---------- guion ---------- */
+  .script{margin-top:24px;}
+  .seg{padding:15px 0; border-top:1px solid var(--line); cursor:pointer; transition:opacity .25s ease;}
   .seg:first-child{border-top:none;}
   .seg .head{display:flex; align-items:center; gap:10px; margin-bottom:7px;}
   .seg .dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
+  .seg .marker{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
+  .ask{margin-left:auto; width:26px; height:26px; flex:0 0 auto; border-radius:50%; border:1px solid var(--line); background:transparent; color:var(--muted); font-family:var(--serif); font-weight:700; font-size:15px; line-height:1; cursor:pointer;}
+  .ask.on{border-color:var(--accent); color:var(--accent);}
   .seg .body{font-size:19px;}
-  .seg .ctx{font-size:16px; color:var(--muted); font-style:italic; margin-top:8px;}
-  .seg .src{font-family:var(--sans); font-size:11.5px; letter-spacing:.04em; color:var(--muted); margin-top:10px;}
   .seg.special .body{font-family:var(--sans); font-weight:500; font-size:17.5px;}
+  .seg .ctx{font-size:16px; color:var(--muted); font-style:italic; margin-top:8px;}
+  .seg .src{font-family:var(--sans); font-size:11.5px; letter-spacing:.03em; color:var(--muted); margin-top:10px;}
+  .deep{margin-top:11px; padding:12px 14px; border-left:3px solid var(--accent); background:var(--surface); font-size:16px; display:none;}
+  .deep.open{display:block;}
+  .deep .lbl{display:block; font-family:var(--sans); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
   .seg.live{opacity:1;}
-  .seg.live .marker{color:var(--signal);}
-  .seg.spoken{opacity:.5;}
-  .seg .marker{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);}
+  .seg.live .marker{color:var(--accent);}
+  .seg.spoken{opacity:.45;}
 
   /* ---------- ajustes ---------- */
-  .gear{
-    position:fixed; right:18px; bottom:calc(22px + env(safe-area-inset-bottom));
-    width:54px; height:54px; border-radius:50%; border:1px solid var(--faint);
-    background:var(--panel); color:var(--paper); font-size:22px; cursor:pointer; z-index:30;
-    box-shadow:0 6px 22px rgba(0,0,0,.4);
-  }
-  .sheet-bg{position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s;}
+  .gear{position:fixed; right:18px; bottom:calc(22px + env(safe-area-inset-bottom)); width:54px; height:54px; border-radius:50%; border:1px solid var(--line); background:var(--surface); color:var(--text); cursor:pointer; z-index:30; display:grid; place-items:center; box-shadow:0 6px 20px rgba(27,23,18,.18);}
+  .sheet-bg{position:fixed; inset:0; background:rgba(27,23,18,.45); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s;}
   .sheet-bg.open{opacity:1; pointer-events:auto;}
-  .sheet{
-    position:fixed; left:0; right:0; bottom:0; z-index:50;
-    background:var(--panel); border-top-left-radius:22px; border-top-right-radius:22px;
-    border-top:1px solid var(--faint); padding:8px 0 calc(26px + env(safe-area-inset-bottom));
-    transform:translateY(102%); transition:transform .3s cubic-bezier(.2,.8,.2,1); max-height:86vh; overflow:auto;
-  }
+  .sheet{position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--surface); border-top-left-radius:18px; border-top-right-radius:18px; border-top:1px solid var(--line); transform:translateY(102%); transition:transform .3s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column; max-height:88vh;}
   .sheet.open{transform:translateY(0);}
-  .grip{width:40px; height:4px; background:var(--faint); border-radius:3px; margin:10px auto 6px;}
-  .sheet .wrap{padding:0 22px;}
-  .sheet h2{font-family:var(--sans); font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:22px 0 12px; font-weight:700;}
-  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid rgba(94,87,76,.45);}
+  .sheet-bar{flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:15px 20px 12px; border-bottom:1px solid var(--line);}
+  .sheet-title{font-family:var(--sans); font-weight:700; font-size:14px; letter-spacing:.14em; text-transform:uppercase;}
+  .sheet-close{width:34px; height:34px; border-radius:50%; border:1px solid var(--line); background:var(--surface2); color:var(--text); display:grid; place-items:center; cursor:pointer;}
+  .sheet-body{flex:1 1 auto; min-height:0; overflow-y:auto; padding:2px 20px calc(26px + env(safe-area-inset-bottom));}
+  .sheet-body h2{font-family:var(--sans); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:22px 0 10px; font-weight:700;}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:11px 0; border-top:1px solid var(--line);}
   .row:first-of-type{border-top:none;}
   .row label{font-family:var(--sans); font-size:15px;}
   .row .hint{font-family:var(--sans); font-size:12px; color:var(--muted); margin-top:2px;}
-  /* switch */
-  .sw{width:46px; height:27px; border-radius:16px; background:var(--panel-2); border:1px solid var(--faint); position:relative; flex:0 0 auto; cursor:pointer; transition:background .2s;}
+  .sw{width:46px; height:27px; border-radius:16px; background:var(--surface2); border:1px solid var(--line); position:relative; flex:0 0 auto; cursor:pointer; transition:background .2s;}
   .sw::after{content:""; position:absolute; top:2px; left:2px; width:21px; height:21px; border-radius:50%; background:var(--muted); transition:transform .2s, background .2s;}
-  .sw.on{background:rgba(240,163,60,.25); border-color:var(--signal);}
-  .sw.on::after{transform:translateX(19px); background:var(--signal);}
-  /* chips */
+  .sw.on{background:rgba(124,36,54,.22); border-color:var(--accent);}
+  .sw.on::after{transform:translateX(19px); background:var(--accent);}
   .chips{display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 2px;}
-  .chip{font-family:var(--sans); font-size:13px; padding:8px 13px; border-radius:20px; border:1px solid var(--faint); background:transparent; color:var(--muted); cursor:pointer;}
-  .chip.on{border-color:var(--signal); color:var(--signal); background:rgba(240,163,60,.12);}
-  /* segmented */
+  .chip{font-family:var(--sans); font-size:13px; padding:8px 13px; border-radius:18px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer;}
+  .chip.on{border-color:var(--accent); color:var(--accent); background:rgba(124,36,54,.10);}
   .seg-ctrl{display:flex; gap:6px; flex-wrap:wrap;}
-  .seg-ctrl button{font-family:var(--sans); font-size:13px; padding:8px 12px; border-radius:11px; border:1px solid var(--faint); background:transparent; color:var(--muted); cursor:pointer;}
-  .seg-ctrl button.on{border-color:var(--signal); color:var(--ink); background:var(--signal);}
-  select.dur{font-family:var(--sans); font-size:15px; background:var(--panel-2); color:var(--paper); border:1px solid var(--faint); border-radius:11px; padding:9px 12px;}
-  .vnote{font-family:var(--sans); font-size:12.5px; line-height:1.5; color:var(--muted); background:var(--panel-2); border:1px solid var(--faint); border-radius:12px; padding:11px 13px; margin:2px 0 12px;}
-  .vnote b{color:var(--paper); font-weight:600;}
+  .seg-ctrl button{font-family:var(--sans); font-size:13px; padding:8px 12px; border-radius:9px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer;}
+  .seg-ctrl button.on{border-color:var(--accent); color:var(--bg); background:var(--accent);}
+  select.dur{font-family:var(--sans); font-size:15px; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:9px 12px;}
+  .slider{-webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:3px; background:var(--surface2); outline:none;}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:var(--accent); cursor:pointer; border:none;}
+  .slider::-moz-range-thumb{width:22px; height:22px; border:none; border-radius:50%; background:var(--accent); cursor:pointer;}
+  .vnote{font-family:var(--sans); font-size:12.5px; line-height:1.5; color:var(--muted); background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:11px 13px; margin:2px 0 12px;}
+  .vnote b{color:var(--text); font-weight:600;}
 
-  .play svg, .gear svg, .sheet-close svg{display:block;}
-  .sheet-close{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%;
-    border:1px solid var(--faint); background:var(--panel-2); color:var(--paper); display:grid; place-items:center; cursor:pointer; z-index:2;}
-  .sheet-title{margin-top:14px !important; color:var(--paper) !important; font-size:18px !important; letter-spacing:.02em !important; text-transform:none !important;}
-  .slider{-webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:3px; background:var(--panel-2); outline:none;}
-  .slider::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:var(--signal); cursor:pointer; border:none;}
-  .slider::-moz-range-thumb{width:22px; height:22px; border:none; border-radius:50%; background:var(--signal); cursor:pointer;}
-
-  #loader{position:fixed; inset:0; z-index:999; background:#ffffff;}
+  /* ---------- pantalla de carga ---------- */
+  #loader{position:fixed; inset:0; z-index:999; background:var(--bg);}
   #loader canvas{display:block; width:100%; height:100%;}
   #loader.hide{opacity:0; pointer-events:none; transition:opacity .6s ease;}
 
@@ -169,14 +134,15 @@
 </head>
 <body>
   <div id="loader"><canvas id="loaderCv"></canvas></div>
+
   <div class="wrap">
     <header>
-      <h1 class="masthead">Lo <b>Esencial</b></h1>
-      <span class="data" id="fecha"></span>
+      <div class="kicker">Edición diaria</div>
+      <h1 class="masthead">Lo Esencial</h1>
+      <div class="dateline"><span>Vigo · Galicia</span><span id="fecha"></span></div>
     </header>
-    <p class="sub">El informativo del día — lo que ha pasado, sin el ruido.</p>
+    <p class="sub">Lo que ha pasado hoy, sin el ruido.</p>
 
-    <!-- consola -->
     <section class="console">
       <div class="wave" id="wave"></div>
       <div class="controls">
@@ -188,24 +154,23 @@
       </div>
     </section>
 
-    <!-- tono del día -->
     <div class="tono">
       <span class="eyebrow">Tono del día</span>
       <div class="tonobar" id="tonobar"></div>
       <div class="tonolegend data" id="tonolegend"></div>
     </div>
 
-    <!-- guion -->
     <section class="script" id="script"></section>
   </div>
 
   <button class="gear" id="gear" aria-label="Ajustes"></button>
   <div class="sheet-bg" id="sheetBg"></div>
   <div class="sheet" id="sheet">
-    <div class="grip"></div>
-    <button class="sheet-close" id="sheetClose" aria-label="Cerrar ajustes"></button>
-    <div class="wrap">
-      <h2 class="sheet-title">Ajustes</h2>
+    <div class="sheet-bar">
+      <span class="sheet-title">Ajustes</span>
+      <button class="sheet-close" id="sheetClose" aria-label="Cerrar"></button>
+    </div>
+    <div class="sheet-body">
       <h2>Duración</h2>
       <div class="row">
         <div><label>Minutos del informativo</label></div>
@@ -247,13 +212,14 @@
           <button data-tono="calmado" class="on">Calmado</button>
           <button data-tono="analitico">Analítico</button>
           <button data-tono="ligero">Ligero</button>
+          <button data-tono="ironico">Irónico</button>
         </div>
       </div>
 
       <h2>Velocidad de lectura</h2>
       <div class="row" style="border:none;">
-        <input type="range" id="speed" min="0.6" max="1.4" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
-        <span class="data" id="speedVal" style="min-width:44px; text-align:right;">1.0×</span>
+        <input type="range" id="speed" min="0.85" max="1.2" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
+        <span class="data" id="speedVal" style="min-width:48px; text-align:right;">1.00×</span>
       </div>
     </div>
   </div>
@@ -261,44 +227,49 @@
 <script>
 "use strict";
 
-/* ====== NOMBRE (cámbialo aquí) ====== */
 const NOMBRE = "Lo Esencial";
 
-/* ====== iconos SVG (sin emojis) ====== */
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.3"/><rect x="14" y="5" width="4" height="14" rx="1.3"/></svg>';
 const ICON_SETTINGS = '<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor" aria-hidden="true"><path d="M3 7h7.2a3 3 0 0 1 5.6 0H21v2h-5.2a3 3 0 0 1-5.6 0H3V7zm0 8h5.2a3 3 0 0 1 5.6 0H21v2h-7.2a3 3 0 0 1-5.6 0H3v-2z"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
 
-/* ====== datos de EJEMPLO (placeholder) ====== */
-/* tono: positiva | neutra | negativa · peso: light | heavy (para la voz) */
+/* ====== noticias de EJEMPLO (extra = explicación a fondo del botón "?") ====== */
 const DATA = [
   { id:"sc1", tema:"ciencia", tono:"positiva", peso:"heavy", rel:95,
     texto:"Un equipo internacional ha logrado mantener estable un material superconductor a temperaturas mucho más altas de lo habitual, un paso que la física llevaba años persiguiendo. Si se confirma a gran escala, podría cambiar desde el transporte de energía hasta la computación. De momento, conviene la calma: es un avance sólido, todavía no una revolución de bolsillo.",
     ctx:"La superconductividad permite transmitir electricidad sin pérdidas, pero hasta ahora exigía un frío extremo difícil de mantener fuera de un laboratorio.",
+    extra:"En un superconductor los electrones se emparejan y circulan sin chocar contra la estructura del material, y por eso no se pierde energía. El reto no es enfriarlo, que ya sabemos hacerlo, sino conseguirlo cerca de temperatura ambiente y a presión normal, y que otros laboratorios reproduzcan el resultado. Por eso la comunidad celebra pero no echa las campanas al vuelo hasta que el experimento se repite de forma independiente.",
     fuentes:["Nature","Reuters"] },
   { id:"ec1", tema:"economia", tono:"neutra", peso:"heavy", rel:82,
     texto:"El banco central mantuvo los tipos de interés sin cambios, en línea con lo esperado. La decisión busca ganar tiempo para ver si la inflación sigue cediendo antes de mover ficha.",
     ctx:"Los tipos de interés encarecen o abaratan el crédito: subirlos enfría el consumo, bajarlos lo estimula.",
+    extra:"Cuando el banco central toca los tipos, el efecto no se nota al día siguiente: tarda meses en llegar a tu hipoteca, a lo que te paga la cuenta de ahorro y al crédito de las empresas. Mantenerlos quietos equivale, en la práctica, a decir 'esperemos a ver', sin frenar ni acelerar la economía.",
     fuentes:["Bloomberg","Reuters"] },
   { id:"in1", tema:"internacional", tono:"negativa", peso:"heavy", rel:88,
     texto:"Continúan los choques en la frontera de la región, sin acuerdo a la vista pese a la mediación internacional. Las cifras de personas desplazadas vuelven a subir.",
     cont:"Esto viene de la escalada que arrancó hace dos semanas.",
+    extra:"El origen mezcla disputas de territorio y de identidad que se arrastran desde hace generaciones, con varios intentos de acuerdo que no llegaron a cuajar. Las treguas suelen romperse por incidentes locales, y cada repunte de violencia deja más personas desplazadas y más desconfianza de cara a la siguiente negociación.",
     fuentes:["BBC","Associated Press","Reuters"] },
   { id:"tc1", tema:"tecnologia", tono:"neutra", peso:"light", rel:70,
     texto:"Una de las grandes tecnológicas presentó la nueva versión de su sistema operativo. Trae mejoras de eficiencia y algún cambio de diseño, sin el terremoto que anunciaban los titulares. En la práctica: irá algo más rápido y tendrás que reubicar un par de botones.",
+    extra:"Las grandes actualizaciones de sistema operativo cambian poco tu día a día porque la mayoría son ajustes internos de seguridad y rendimiento. Lo visible —un icono nuevo, un menú movido— es la punta del iceberg; lo que de verdad importa ocurre por debajo y rara vez se nota hasta que algo deja de fallar.",
     fuentes:["The Verge","Associated Press"] },
   { id:"ma1", tema:"medioambiente", tono:"positiva", peso:"heavy", rel:67,
     texto:"Un informe registra el mayor avance anual en energía renovable instalada hasta la fecha, con la solar a la cabeza. La transición avanza más rápido de lo que sugieren las discusiones diarias.",
+    extra:"'Capacidad instalada' es cuánta energía se podría generar como máximo, no la que realmente se produce: el sol no brilla de noche ni el viento sopla siempre. Aun así, batir el récord de instalación marca la dirección, porque esa capacidad se va aprovechando mejor a medida que avanza el almacenamiento en baterías.",
     fuentes:["AIE","The Guardian"] },
   { id:"ga1", tema:"galicia", tono:"neutra", peso:"light", rel:60,
     texto:"En Vigo, el plan para reorganizar las líneas de Vitrasa entra en su fase de alegaciones: hay cambios de recorrido en varias zonas y los vecinos tienen un mes para opinar. Traducción: revisa tu parada antes de darla por sentada.",
+    extra:"Una fase de alegaciones es el periodo en el que el ayuntamiento publica el plan y la gente puede presentar por escrito objeciones o propuestas antes de que sea definitivo. No es una formalidad vacía: si suficientes vecinos señalan un recorrido mal pensado, todavía puede cambiarse antes de aprobarlo.",
     fuentes:["Faro de Vigo"] },
   { id:"cu1", tema:"cultura", tono:"positiva", peso:"light", rel:58,
     texto:"Una novela traducida del coreano se ha convertido en el fenómeno editorial del mes, agotando ediciones antes incluso de las reseñas. A veces el boca a boca todavía le gana la partida a la maquinaria de marketing.",
+    extra:"La narrativa traducida vive un buen momento por una mezcla de factores: comunidades de lectores en redes que recomiendan sin intermediarios, editoriales pequeñas que apuestan por voces de fuera, y premios internacionales que dan visibilidad a idiomas que antes apenas llegaban a las librerías.",
     fuentes:["El País"] },
   { id:"de1", tema:"deportes", tono:"neutra", peso:"light", rel:48,
     texto:"Jornada tranquila de liga, con un único resultado que mueve la tabla por arriba. Nada que no se pueda resumir en una frase, así que ya está resumido.",
+    extra:"Ese único resultado reordena la zona alta porque acerca o aleja a los equipos en la pelea por el título; el resto de la jornada no movió nada sustancial, así que no hay mucho más que contar sin rellenar por rellenar.",
     fuentes:["Marca"] }
 ];
 
@@ -312,18 +283,20 @@ const TONO_COLOR = { positiva:"var(--pos)", neutra:"var(--neu)", negativa:"var(-
 const TONO_LABEL = { positiva:"Positiva", neutra:"Neutra", negativa:"Negativa" };
 const DUR_BLOCKS = { 1:1, 3:2, 5:3, 10:5, 15:7, 20:8 };
 const CONNECTORS = ["", "Cambiamos de tema.", "En otro orden de cosas.", "Seguimos.", "Mientras tanto.", "Y antes de cerrar,"];
+const CONNECTORS_IRONIA = ["", "Cómo no, otra cosa más.", "Por si te faltaban motivos,", "Atención, que viene una de las buenas.", "Y mientras nadie miraba,", "Para rematar la función,"];
 
-/* ====== estado + persistencia (a prueba de sandbox) ====== */
+/* ====== estado ====== */
 const store = {
   get(k,f){ try{ const v=localStorage.getItem(k); return v==null?f:JSON.parse(v);}catch(e){return f;} },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
-const cfg = store.get("senal_cfg", {
+const cfg = store.get("loesencial_cfg", {
   dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1,
   tono:"calmado", voiceURI:"", intereses:["ciencia","tecnologia","economia","cultura","medioambiente","galicia"]
 });
 
 /* ====== generación del guion (reglas, sin IA) ====== */
+function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 function generarGuion(){
   let items = DATA.filter(n => cfg.intereses.includes(n.tema));
   if(cfg.noAmargues) items = items.filter(n => !HIDE.has(n.tema) && n.tono!=="negativa");
@@ -334,22 +307,30 @@ function generarGuion(){
 
   const cuenta = {positiva:0,neutra:0,negativa:0};
   items.forEach(i=>cuenta[i.tono]++);
+  const iron = cfg.tono==="ironico";
 
-  const firma = `Buenos días. ${fechaLarga()}. Esto es ${NOMBRE}: lo que ha pasado hoy, contado en ${cfg.dur} ${cfg.dur===1?"minuto":"minutos"} y sin el ruido de costumbre.`;
+  const firma = iron
+    ? `Buenos días, si es que lo son. ${cap(fechaLarga())}. Esto es ${NOMBRE}: las noticias de hoy, con el ruido ya retirado y un poco de mala leche incluida.`
+    : `Buenos días. ${cap(fechaLarga())}. Esto es ${NOMBRE}: lo que ha pasado hoy, contado en ${cfg.dur} ${cfg.dur===1?"minuto":"minutos"} y sin el ruido de costumbre.`;
   const dominante = Object.keys(cuenta).sort((a,b)=>cuenta[b]-cuenta[a])[0] || "neutra";
   let resumen = `El balance del día es mayormente ${TONO_LABEL[dominante].toLowerCase()}: ${cuenta.positiva} positivas, ${cuenta.neutra} neutras y ${cuenta.negativa} negativas.`;
   if(cfg.noAmargues) resumen += " Hoy te hemos ahorrado lo más áspero.";
-  const cierre = "Y hasta aquí. Mañana habrá más, aunque probablemente menos de lo que parezca. Que tengas buen día.";
+  const cierre = iron
+    ? "Y eso es todo. El mundo girará exactamente igual lo escuches o no, pero al menos ahora estás informada. Hasta mañana."
+    : "Y hasta aquí. Mañana habrá más, aunque probablemente menos de lo que parezca. Que tengas buen día.";
 
   return { firma, items, resumen, cierre, cuenta };
 }
 
 /* ====== render ====== */
 const $ = s => document.querySelector(s);
-let SEGMENTS = []; // {el, text, rate}
+let SEGMENTS = [];
 
+function rateBase(){ return ({serio:.95, calmado:.93, analitico:1.0, ligero:1.06, ironico:.98})[cfg.tono] || .95; }
+function pitchFor(){ return cfg.tono==="ligero"?1.05 : cfg.tono==="serio"?0.95 : cfg.tono==="ironico"?1.03 : 1.0; }
+function clampRate(x){ return Math.min(1.6, Math.max(0.5, x)); }
 function tasaPara(item){
-  const base = { serio:0.95, calmado:0.93, analitico:1.0, ligero:1.06 }[cfg.tono] || 0.95;
+  const base = rateBase();
   if(!cfg.velInteligente || !item) return base;
   return item.peso==="heavy" ? base*0.9 : base*1.08;
 }
@@ -358,52 +339,55 @@ function render(){
   const g = generarGuion();
   const script = $("#script"); script.innerHTML = ""; SEGMENTS = [];
 
-  const add = (html, text, rate, cls="") => {
+  const mk = (html, text, rate, opts={}) => {
     const el = document.createElement("div");
-    el.className = "seg " + cls;
+    el.className = "seg" + (opts.special?" special":"");
     el.innerHTML = html;
-    el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
-    script.appendChild(el);
     const seg = { el, text, rate };
+    el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
+    if(opts.extra){
+      const ask=el.querySelector(".ask"), deep=el.querySelector(".deep");
+      if(ask && deep){
+        ask.addEventListener("click", ev=>{ ev.stopPropagation(); const o=deep.classList.toggle("open"); ask.classList.toggle("on",o); });
+        deep.addEventListener("click", ev=>ev.stopPropagation());
+      }
+    }
+    script.appendChild(el);
     SEGMENTS.push(seg);
     return seg;
   };
 
-  // firma
-  add(`<div class="head"><span class="marker">Apertura</span></div><div class="body">${g.firma}</div>`,
-      g.firma, tasaPara(null), "special");
+  mk(`<div class="head"><span class="marker">Apertura</span></div><div class="body">${g.firma}</div>`,
+     g.firma, tasaPara(null), {special:true});
 
-  // bloques
-  g.items.forEach((it,idx)=>{
-    const conn = CONNECTORS[idx % CONNECTORS.length];
-    const contPrefix = it.cont ? `${it.cont} ` : "";
-    const spoken = `${conn? conn+" ":""}${contPrefix}${it.texto}${it.ctx? " "+it.ctx : ""}`;
+  const conns = cfg.tono==="ironico" ? CONNECTORS_IRONIA : CONNECTORS;
+  g.items.forEach((it,i)=>{
+    const conn = conns[i % conns.length];
+    const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${it.texto}${it.ctx? " "+it.ctx : ""}`;
     let html = `<div class="head">
         <span class="dot" style="background:${TONO_COLOR[it.tono]}"></span>
-        <span class="marker">${TEMAS[it.tema]||it.tema}</span></div>
+        <span class="marker">${TEMAS[it.tema]||it.tema}</span>
+        <button class="ask" aria-label="Explicar más a fondo">?</button></div>
         <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${it.texto}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
     html += `<div class="src">Contrastado en ${listar(it.fuentes)}.</div>`;
-    add(html, spoken, tasaPara(it));
+    if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}</div>`;
+    mk(html, spoken, tasaPara(it), {extra:!!it.extra});
   });
 
-  // resumen emocional
-  add(`<div class="head"><span class="marker">Balance</span></div><div class="body">${g.resumen}</div>`,
-      g.resumen, tasaPara(null), "special");
-  // cierre
-  add(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
-      g.cierre, tasaPara(null), "special");
+  mk(`<div class="head"><span class="marker">Balance</span></div><div class="body">${g.resumen}</div>`,
+     g.resumen, tasaPara(null), {special:true});
+  mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
+     g.cierre, tasaPara(null), {special:true});
 
-  // tono del día
   renderTono(g.cuenta, g.items.length);
 
-  // meta
   const palabras = SEGMENTS.reduce((a,s)=>a+s.text.split(/\s+/).length,0);
   const mins = Math.max(1, Math.round(palabras/150));
-  $("#nowMeta").textContent = `${g.items.length} ${g.items.length===1?"bloque":"bloques"} · ≈ ${mins} min · es-ES`;
+  $("#nowMeta").textContent = `${g.items.length} ${g.items.length===1?"bloque":"bloques"} · ≈ ${mins} min`;
   $("#nowTitle").textContent = "Informativo listo";
 
-  stop(); // resetea reproducción al regenerar
+  stop();
 }
 
 function renderTono(c, total){
@@ -421,12 +405,10 @@ function renderTono(c, total){
 }
 
 function listar(a){ return a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ")+" y "+a[a.length-1]; }
-function fechaLarga(){
-  return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
-}
+function fechaLarga(){ return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"}); }
 
-/* ====== voz (Web Speech) ====== */
-let voices = [], voz = null, idx = -1, queue = [], qi = 0, playing = false;
+/* ====== voz (Web Speech) — con guarda de generación para evitar bucles ====== */
+let voices=[], voz=null, idx=-1, queue=[], qi=0, playing=false, gen=0;
 
 function elegirVozPorDefecto(){
   const es = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
@@ -449,132 +431,111 @@ function setLive(i){
   if(i>=0 && SEGMENTS[i]) SEGMENTS[i].el.scrollIntoView({behavior:"smooth", block:"center"});
 }
 
-// trocea por frases (más estable en iOS)
 function construirCola(){
   queue = [];
   SEGMENTS.forEach((s,si)=>{
     const frases = s.text.match(/[^.!?]+[.!?]*/g) || [s.text];
-    frases.forEach((f,fi,arr)=> queue.push({seg:si, text:f.trim(), rate:s.rate, last:fi===arr.length-1}));
+    frases.forEach(f=> queue.push({seg:si, text:f.trim(), rate:s.rate}));
   });
 }
 
-function play(){
-  if(!window.speechSynthesis){ $("#nowTitle").textContent="Tu navegador no soporta voz"; return; }
-  if(playing) return;
-  if(qi===0 || qi>=queue.length){ construirCola(); qi=0; }
-  playing = true;
-  document.body.classList.add("playing");
-  $("#play").classList.remove("paused"); $("#play").innerHTML=ICON_PAUSE;
-  $("#nowTitle").textContent = NOMBRE+" en directo";
-  speakNext();
+function uiPlaying(on){
+  document.body.classList.toggle("playing", on);
+  $("#play").classList.toggle("paused", !on);
+  $("#play").innerHTML = on ? ICON_PAUSE : ICON_PLAY;
 }
 
-function speakNext(){
-  if(!playing) return;
+function startSpeak(){
+  const myGen = ++gen;                 // invalida callbacks anteriores
+  speechSynthesis.cancel();
+  uiPlaying(true);
+  $("#nowTitle").textContent = NOMBRE+" en directo";
+  setTimeout(()=>{ if(myGen===gen && playing) speakNext(myGen); }, 90);
+}
+
+function speakNext(myGen){
+  if(myGen!==gen || !playing) return;
   if(qi>=queue.length){ stop(); return; }
   const chunk = queue[qi];
   if(chunk.seg!==idx){ idx=chunk.seg; setLive(idx); }
   const u = new SpeechSynthesisUtterance(chunk.text);
   if(voz){ u.voice=voz; u.lang=voz.lang||"es-ES"; } else u.lang="es-ES";
-  u.rate=Math.min(1.6, Math.max(0.5, chunk.rate*(cfg.speed||1))); u.pitch = (cfg.tono==="ligero"?1.05:cfg.tono==="serio"?0.95:1.0);
-  u.onend = ()=>{ qi++; speakNext(); };
-  u.onerror = ()=>{ qi++; speakNext(); };
+  u.rate = clampRate(chunk.rate*(cfg.speed||1));
+  u.pitch = pitchFor();
+  u.onend = ()=>{ if(myGen!==gen) return; qi++; speakNext(myGen); };
+  u.onerror = ()=>{ if(myGen!==gen) return; qi++; speakNext(myGen); };
   speechSynthesis.speak(u);
 }
 
-function pause(){
-  playing=false;
-  if(window.speechSynthesis) speechSynthesis.cancel(); // iOS no respeta pause() fiable -> cancel y retomamos por chunk
-  document.body.classList.remove("playing");
-  $("#play").classList.add("paused"); $("#play").innerHTML=ICON_PLAY;
-  $("#nowTitle").textContent="En pausa";
+function play(){
+  if(!window.speechSynthesis){ $("#nowTitle").textContent="Tu navegador no soporta voz"; return; }
+  if(playing) return;
+  if(!queue.length || qi>=queue.length || qi<0){ construirCola(); qi=0; }
+  playing = true;
+  startSpeak();
 }
-
-function stop(){
-  playing=false; qi=0; idx=-1;
+function pause(){
+  gen++; playing=false;
   if(window.speechSynthesis) speechSynthesis.cancel();
-  setLive(-1);
-  document.body.classList.remove("playing");
-  $("#play").classList.add("paused"); $("#play").innerHTML=ICON_PLAY;
+  uiPlaying(false); $("#nowTitle").textContent="En pausa";
+}
+function stop(){
+  gen++; playing=false; qi=0; idx=-1;
+  if(window.speechSynthesis) speechSynthesis.cancel();
+  setLive(-1); uiPlaying(false);
   if($("#nowTitle").textContent!=="Informativo listo") $("#nowTitle").textContent="Informativo listo";
 }
-
 function jumpTo(i){
   if(i<0) return;
-  construirCola();
-  qi = queue.findIndex(c=>c.seg===i);
-  if(qi<0) qi=0;
-  if(window.speechSynthesis) speechSynthesis.cancel();
-  playing=false; play();
+  if(!queue.length) construirCola();
+  const pos = queue.findIndex(c=>c.seg===i);
+  qi = pos<0 ? 0 : pos;
+  playing = true;
+  startSpeak();
 }
 
-/* ====== ondas (visual) ====== */
-(function(){
-  const w=$("#wave"); let h="";
-  for(let i=0;i<42;i++){ h+=`<i style="animation-delay:${(i*55)%900}ms"></i>`; }
-  w.innerHTML=h;
-})();
+/* ====== ondas ====== */
+(function(){ const w=$("#wave"); let h=""; for(let i=0;i<42;i++){ h+=`<i style="animation-delay:${(i*55)%900}ms"></i>`; } w.innerHTML=h; })();
 
 /* ====== ajustes UI ====== */
 const sheet=$("#sheet"), bg=$("#sheetBg");
 function openSheet(){ sheet.classList.add("open"); bg.classList.add("open"); }
 function closeSheet(){ sheet.classList.remove("open"); bg.classList.remove("open"); }
-$("#gear").onclick=openSheet; bg.onclick=closeSheet;
-$("#sheetClose").onclick=closeSheet;
+$("#gear").onclick=openSheet; bg.onclick=closeSheet; $("#sheetClose").onclick=closeSheet;
 
-// iconos
-$("#play").innerHTML=ICON_PLAY;
-$("#gear").innerHTML=ICON_SETTINGS;
-$("#sheetClose").innerHTML=ICON_CLOSE;
+$("#play").innerHTML=ICON_PLAY; $("#gear").innerHTML=ICON_SETTINGS; $("#sheetClose").innerHTML=ICON_CLOSE;
 
-// velocidad de lectura
-const speed=$("#speed"), speedVal=$("#speedVal");
-speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(1)+"×";
-speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(1)+"×"; save(); };
-
-// duración
 const durSel=$("#dur"); durSel.value=cfg.dur;
 durSel.onchange=()=>{ cfg.dur=+durSel.value; save(); render(); };
 
-// intereses (chips)
 const chips=$("#chips");
 Object.keys(TEMAS).forEach(k=>{
   const b=document.createElement("button");
-  b.className="chip"+(cfg.intereses.includes(k)?" on":"");
-  b.textContent=TEMAS[k];
-  b.onclick=()=>{
-    const i=cfg.intereses.indexOf(k);
-    if(i>=0) cfg.intereses.splice(i,1); else cfg.intereses.push(k);
-    b.classList.toggle("on"); save(); render();
-  };
+  b.className="chip"+(cfg.intereses.includes(k)?" on":""); b.textContent=TEMAS[k];
+  b.onclick=()=>{ const i=cfg.intereses.indexOf(k); if(i>=0) cfg.intereses.splice(i,1); else cfg.intereses.push(k);
+    b.classList.toggle("on"); save(); render(); };
   chips.appendChild(b);
 });
 
-// switches
 document.querySelectorAll(".sw").forEach(sw=>{
-  const flag=sw.dataset.flag;
-  sw.classList.toggle("on", !!cfg[flag]);
+  const flag=sw.dataset.flag; sw.classList.toggle("on", !!cfg[flag]);
   sw.onclick=()=>{ cfg[flag]=!cfg[flag]; sw.classList.toggle("on",cfg[flag]); save(); render(); };
 });
 
-// tono de voz
 document.querySelectorAll("#tono button").forEach(b=>{
   b.classList.toggle("on", b.dataset.tono===cfg.tono);
-  b.onclick=()=>{
-    cfg.tono=b.dataset.tono;
+  b.onclick=()=>{ cfg.tono=b.dataset.tono;
     document.querySelectorAll("#tono button").forEach(x=>x.classList.toggle("on",x===b));
-    save(); render();
-  };
+    save(); render(); };
 });
 
-// voz del dispositivo: nota por plataforma + selector
 const _ua = navigator.userAgent || "";
 const isIOS = /iPad|iPhone|iPod/.test(_ua) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 const isAndroid = /Android/.test(_ua);
 (function(){
   const el=$("#vnote"); if(!el) return;
-  if(isIOS) el.innerHTML="<b>Detectado: iPhone/iPad.</b> Para una voz menos robótica: Ajustes → Accesibilidad → Contenido leído → Voces → Español, y descarga una voz <b>Mejorada</b> o <b>Premium</b>. Aviso: Safari a veces la ignora aunque la descargues; si sigue sonando mal, el arreglo de verdad es audio pre-generado.";
-  else if(isAndroid) el.innerHTML="<b>Detectado: Android.</b> Suele sonar mejor que iOS porque usa el motor de Google. Para afinarla: Ajustes → busca <b>“texto a voz”</b> o <b>“síntesis de voz”</b> → motor <b>Speech Services by Google</b> → descarga una voz en español. Luego elígela aquí abajo.";
+  if(isIOS) el.innerHTML="<b>Detectado: iPhone/iPad.</b> Aviso importante: en iOS, Safari (y cualquier navegador, porque todos usan su motor) solo puede usar voces básicas del sistema. Las voces <b>Premium</b> que descargues no llegan a la web y no hay forma de forzarlas. La voz natural de verdad llegará con audio pre-generado.";
+  else if(isAndroid) el.innerHTML="<b>Detectado: Android.</b> Aquí sí mejora. Ajustes → busca <b>“texto a voz”</b> → motor <b>Speech Services by Google</b> → descarga una voz en español, y luego elígela aquí abajo.";
   else el.innerHTML="<b>Navegador de escritorio.</b> Elige abajo la voz que mejor suene (en Chrome suelen aparecer las de Google).";
 })();
 
@@ -584,25 +545,25 @@ function poblarSelectorVoces(){
   const lista=es.length?es:voices;
   if(!lista.length){ sel.innerHTML="<option>Sin voces disponibles aún…</option>"; return; }
   sel.innerHTML="";
-  lista.forEach(v=>{
-    const o=document.createElement("option");
+  lista.forEach(v=>{ const o=document.createElement("option");
     o.value=v.voiceURI; o.textContent=`${v.name} · ${v.lang}`;
-    if(voz && v.voiceURI===voz.voiceURI) o.selected=true;
-    sel.appendChild(o);
-  });
+    if(voz && v.voiceURI===voz.voiceURI) o.selected=true; sel.appendChild(o); });
 }
-{ const sel=$("#voiceSel");
-  if(sel) sel.onchange=()=>{ cfg.voiceURI=sel.value; voz=voices.find(v=>v.voiceURI===cfg.voiceURI)||voz; save(); }; }
+{ const sel=$("#voiceSel"); if(sel) sel.onchange=()=>{ cfg.voiceURI=sel.value; voz=voices.find(v=>v.voiceURI===cfg.voiceURI)||voz; save(); }; }
 poblarSelectorVoces();
 
-function save(){ store.set("senal_cfg", cfg); }
+const speed=$("#speed"), speedVal=$("#speedVal");
+speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"×";
+speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; save(); };
+
+function save(){ store.set("loesencial_cfg", cfg); }
 
 /* ====== arranque ====== */
 $("#fecha").textContent = new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
 $("#play").onclick = ()=> playing ? pause() : play();
 render();
 
-/* ====== pantalla de carga: letras negras que convergen en "Lo Esencial" ====== */
+/* ====== pantalla de carga: letras negras que convergen y se vuelven nítidas ====== */
 (function(){
   const wrap=document.getElementById("loader"), cv=document.getElementById("loaderCv");
   if(!wrap||!cv) return;
@@ -610,23 +571,20 @@ render();
   const dpr=Math.min(2, window.devicePixelRatio||1);
   const W=cv.width=innerWidth*dpr, H=cv.height=innerHeight*dpr;
   cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px";
-  const FONT='-apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+  const SERIF='700 FS Georgia, "Times New Roman", serif';
+  const TEXT="Lo Esencial", INK="#1B1712";
 
+  let fs=Math.min(W*0.155, H*0.4);
+  function fontAt(px){ return SERIF.replace("FS", px+"px"); }
   // muestrear el texto destino
-  function objetivos(){
-    const off=document.createElement("canvas"); off.width=W; off.height=H;
-    const o=off.getContext("2d");
-    o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle";
-    let fs=Math.min(W*0.155, H*0.4);
-    o.font=`700 ${fs}px ${FONT}`;
-    while(o.measureText("Lo Esencial").width>W*0.84 && fs>10){ fs*=0.94; o.font=`700 ${fs}px ${FONT}`; }
-    o.fillText("Lo Esencial", W/2, H/2);
-    const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(6,Math.round(7*dpr));
-    for(let y=0;y<H;y+=gap) for(let x=0;x<W;x+=gap) if(d[(y*W+x)*4+3]>128) pts.push({x,y});
-    return pts;
-  }
-  let targets=objetivos();
-  const CAP=380;
+  const off=document.createElement("canvas"); off.width=W; off.height=H;
+  const o=off.getContext("2d");
+  o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle"; o.font=fontAt(fs);
+  while(o.measureText(TEXT).width>W*0.84 && fs>10){ fs*=0.94; o.font=fontAt(fs); }
+  o.fillText(TEXT, W/2, H/2);
+  const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(5, Math.round(6*dpr));
+  for(let y=0;y<H;y+=gap) for(let x=0;x<W;x+=gap) if(d[(y*W+x)*4+3]>128) pts.push({x,y});
+  let targets=pts; const CAP=460;
   if(targets.length>CAP){ const st=targets.length/CAP, t=[]; for(let i=0;i<targets.length;i+=st) t.push(targets[Math.floor(i)]); targets=t; }
 
   const chars="loesencialLOESENCIAL".split("");
@@ -638,33 +596,39 @@ render();
   const P=targets.map(t=>{ const s=borde(); return {
     x:s.x, y:s.y, tx:t.x, ty:t.y,
     vx:(Math.random()-0.5)*2.6*dpr, vy:(Math.random()-0.5)*2.6*dpr,
-    ch:chars[(Math.random()*chars.length)|0], delay:Math.random()*0.55 }; });
+    ch:chars[(Math.random()*chars.length)|0], delay:Math.random()*0.5 }; });
 
-  ctx.font=`700 ${Math.max(9,11*dpr)}px ${FONT}`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  const particleFont=fontAt(Math.max(9,11*dpr));
+  ctx.textAlign="center"; ctx.textBaseline="middle";
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const WANDER=1100, CONVERGE=1500, HOLD=650;
+  const WANDER=1000, CONVERGE=1500, HOLD=750;
   let raf, T0=performance.now();
 
   function cerrar(){ cancelAnimationFrame(raf); wrap.classList.add("hide"); setTimeout(()=>wrap.remove(),650); }
   wrap.addEventListener("click", cerrar);
 
   function frame(now){
-    const t=now-T0;
-    ctx.clearRect(0,0,W,H); ctx.fillStyle="#0a0a0a";
+    const t=now-T0; ctx.clearRect(0,0,W,H);
+    ctx.fillStyle=INK; ctx.font=particleFont;
+    let solid=0;
     if(t<WANDER){
       for(const p of P){ p.x+=p.vx; p.y+=p.vy;
         if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1;
         ctx.fillText(p.ch,p.x,p.y); }
     }else{
       const k=Math.min(1,(t-WANDER)/CONVERGE), e=1-Math.pow(1-k,3);
+      solid=Math.max(0,Math.min(1,(e-0.5)/0.5));
+      ctx.globalAlpha=1-0.75*solid;
       for(const p of P){ const kk=Math.max(0,Math.min(1,(e-p.delay)/(1-p.delay)));
         p.x+=(p.tx-p.x)*0.12*(0.4+kk); p.y+=(p.ty-p.y)*0.12*(0.4+kk);
         ctx.fillText(p.ch,p.x,p.y); }
+      ctx.globalAlpha=1;
+      if(solid>0){ ctx.globalAlpha=solid; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
       if(t>WANDER+CONVERGE+HOLD){ cerrar(); return; }
     }
     raf=requestAnimationFrame(frame);
   }
-  if(reduce){ ctx.fillStyle="#0a0a0a"; for(const p of P) ctx.fillText(p.ch,p.tx,p.ty); setTimeout(cerrar,900); }
+  if(reduce){ ctx.fillStyle=INK; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); setTimeout(cerrar,950); }
   else raf=requestAnimationFrame(frame);
 })();
 </script>
