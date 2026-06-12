@@ -149,6 +149,18 @@
   .vnote{font-family:var(--sans); font-size:12.5px; line-height:1.5; color:var(--muted); background:var(--panel-2); border:1px solid var(--faint); border-radius:12px; padding:11px 13px; margin:2px 0 12px;}
   .vnote b{color:var(--paper); font-weight:600;}
 
+  .play svg, .gear svg, .sheet-close svg{display:block;}
+  .sheet-close{position:absolute; top:14px; right:16px; width:34px; height:34px; border-radius:50%;
+    border:1px solid var(--faint); background:var(--panel-2); color:var(--paper); display:grid; place-items:center; cursor:pointer; z-index:2;}
+  .sheet-title{margin-top:14px !important; color:var(--paper) !important; font-size:18px !important; letter-spacing:.02em !important; text-transform:none !important;}
+  .slider{-webkit-appearance:none; appearance:none; flex:1; height:4px; border-radius:3px; background:var(--panel-2); outline:none;}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:var(--signal); cursor:pointer; border:none;}
+  .slider::-moz-range-thumb{width:22px; height:22px; border:none; border-radius:50%; background:var(--signal); cursor:pointer;}
+
+  #loader{position:fixed; inset:0; z-index:999; background:#ffffff;}
+  #loader canvas{display:block; width:100%; height:100%;}
+  #loader.hide{opacity:0; pointer-events:none; transition:opacity .6s ease;}
+
   @media (prefers-reduced-motion: reduce){
     body.playing .wave i{animation:none; transform:scaleY(.5); opacity:.8;}
     *{transition:none !important;}
@@ -156,6 +168,7 @@
 </style>
 </head>
 <body>
+  <div id="loader"><canvas id="loaderCv"></canvas></div>
   <div class="wrap">
     <header>
       <h1 class="masthead">Lo <b>Esencial</b></h1>
@@ -167,7 +180,7 @@
     <section class="console">
       <div class="wave" id="wave"></div>
       <div class="controls">
-        <button class="play paused" id="play" aria-label="Reproducir">▶</button>
+        <button class="play paused" id="play" aria-label="Reproducir"></button>
         <div class="nowmeta">
           <div class="t1" id="nowTitle">Informativo listo</div>
           <div class="t2 data" id="nowMeta"></div>
@@ -186,11 +199,13 @@
     <section class="script" id="script"></section>
   </div>
 
-  <button class="gear" id="gear" aria-label="Ajustes">⚙</button>
+  <button class="gear" id="gear" aria-label="Ajustes"></button>
   <div class="sheet-bg" id="sheetBg"></div>
   <div class="sheet" id="sheet">
     <div class="grip"></div>
+    <button class="sheet-close" id="sheetClose" aria-label="Cerrar ajustes"></button>
     <div class="wrap">
+      <h2 class="sheet-title">Ajustes</h2>
       <h2>Duración</h2>
       <div class="row">
         <div><label>Minutos del informativo</label></div>
@@ -234,6 +249,12 @@
           <button data-tono="ligero">Ligero</button>
         </div>
       </div>
+
+      <h2>Velocidad de lectura</h2>
+      <div class="row" style="border:none;">
+        <input type="range" id="speed" min="0.6" max="1.4" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
+        <span class="data" id="speedVal" style="min-width:44px; text-align:right;">1.0×</span>
+      </div>
     </div>
   </div>
 
@@ -242,6 +263,12 @@
 
 /* ====== NOMBRE (cámbialo aquí) ====== */
 const NOMBRE = "Lo Esencial";
+
+/* ====== iconos SVG (sin emojis) ====== */
+const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
+const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.3"/><rect x="14" y="5" width="4" height="14" rx="1.3"/></svg>';
+const ICON_SETTINGS = '<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor" aria-hidden="true"><path d="M3 7h7.2a3 3 0 0 1 5.6 0H21v2h-5.2a3 3 0 0 1-5.6 0H3V7zm0 8h5.2a3 3 0 0 1 5.6 0H21v2h-7.2a3 3 0 0 1-5.6 0H3v-2z"/></svg>';
+const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
 
 /* ====== datos de EJEMPLO (placeholder) ====== */
 /* tono: positiva | neutra | negativa · peso: light | heavy (para la voz) */
@@ -292,7 +319,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 const cfg = store.get("senal_cfg", {
-  dur:5, noAmargues:false, soloImportante:false, velInteligente:true,
+  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1,
   tono:"calmado", voiceURI:"", intereses:["ciencia","tecnologia","economia","cultura","medioambiente","galicia"]
 });
 
@@ -437,7 +464,7 @@ function play(){
   if(qi===0 || qi>=queue.length){ construirCola(); qi=0; }
   playing = true;
   document.body.classList.add("playing");
-  $("#play").classList.remove("paused"); $("#play").textContent="❚❚";
+  $("#play").classList.remove("paused"); $("#play").innerHTML=ICON_PAUSE;
   $("#nowTitle").textContent = NOMBRE+" en directo";
   speakNext();
 }
@@ -449,7 +476,7 @@ function speakNext(){
   if(chunk.seg!==idx){ idx=chunk.seg; setLive(idx); }
   const u = new SpeechSynthesisUtterance(chunk.text);
   if(voz){ u.voice=voz; u.lang=voz.lang||"es-ES"; } else u.lang="es-ES";
-  u.rate=chunk.rate; u.pitch = (cfg.tono==="ligero"?1.05:cfg.tono==="serio"?0.95:1.0);
+  u.rate=Math.min(1.6, Math.max(0.5, chunk.rate*(cfg.speed||1))); u.pitch = (cfg.tono==="ligero"?1.05:cfg.tono==="serio"?0.95:1.0);
   u.onend = ()=>{ qi++; speakNext(); };
   u.onerror = ()=>{ qi++; speakNext(); };
   speechSynthesis.speak(u);
@@ -459,7 +486,7 @@ function pause(){
   playing=false;
   if(window.speechSynthesis) speechSynthesis.cancel(); // iOS no respeta pause() fiable -> cancel y retomamos por chunk
   document.body.classList.remove("playing");
-  $("#play").classList.add("paused"); $("#play").textContent="▶";
+  $("#play").classList.add("paused"); $("#play").innerHTML=ICON_PLAY;
   $("#nowTitle").textContent="En pausa";
 }
 
@@ -468,7 +495,7 @@ function stop(){
   if(window.speechSynthesis) speechSynthesis.cancel();
   setLive(-1);
   document.body.classList.remove("playing");
-  $("#play").classList.add("paused"); $("#play").textContent="▶";
+  $("#play").classList.add("paused"); $("#play").innerHTML=ICON_PLAY;
   if($("#nowTitle").textContent!=="Informativo listo") $("#nowTitle").textContent="Informativo listo";
 }
 
@@ -493,6 +520,17 @@ const sheet=$("#sheet"), bg=$("#sheetBg");
 function openSheet(){ sheet.classList.add("open"); bg.classList.add("open"); }
 function closeSheet(){ sheet.classList.remove("open"); bg.classList.remove("open"); }
 $("#gear").onclick=openSheet; bg.onclick=closeSheet;
+$("#sheetClose").onclick=closeSheet;
+
+// iconos
+$("#play").innerHTML=ICON_PLAY;
+$("#gear").innerHTML=ICON_SETTINGS;
+$("#sheetClose").innerHTML=ICON_CLOSE;
+
+// velocidad de lectura
+const speed=$("#speed"), speedVal=$("#speedVal");
+speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(1)+"×";
+speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(1)+"×"; save(); };
 
 // duración
 const durSel=$("#dur"); durSel.value=cfg.dur;
@@ -563,6 +601,72 @@ function save(){ store.set("senal_cfg", cfg); }
 $("#fecha").textContent = new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
 $("#play").onclick = ()=> playing ? pause() : play();
 render();
+
+/* ====== pantalla de carga: letras negras que convergen en "Lo Esencial" ====== */
+(function(){
+  const wrap=document.getElementById("loader"), cv=document.getElementById("loaderCv");
+  if(!wrap||!cv) return;
+  const ctx=cv.getContext("2d");
+  const dpr=Math.min(2, window.devicePixelRatio||1);
+  const W=cv.width=innerWidth*dpr, H=cv.height=innerHeight*dpr;
+  cv.style.width=innerWidth+"px"; cv.style.height=innerHeight+"px";
+  const FONT='-apple-system, "Segoe UI", Roboto, Arial, sans-serif';
+
+  // muestrear el texto destino
+  function objetivos(){
+    const off=document.createElement("canvas"); off.width=W; off.height=H;
+    const o=off.getContext("2d");
+    o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle";
+    let fs=Math.min(W*0.155, H*0.4);
+    o.font=`700 ${fs}px ${FONT}`;
+    while(o.measureText("Lo Esencial").width>W*0.84 && fs>10){ fs*=0.94; o.font=`700 ${fs}px ${FONT}`; }
+    o.fillText("Lo Esencial", W/2, H/2);
+    const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(6,Math.round(7*dpr));
+    for(let y=0;y<H;y+=gap) for(let x=0;x<W;x+=gap) if(d[(y*W+x)*4+3]>128) pts.push({x,y});
+    return pts;
+  }
+  let targets=objetivos();
+  const CAP=380;
+  if(targets.length>CAP){ const st=targets.length/CAP, t=[]; for(let i=0;i<targets.length;i+=st) t.push(targets[Math.floor(i)]); targets=t; }
+
+  const chars="loesencialLOESENCIAL".split("");
+  function borde(){ const e=(Math.random()*4)|0, m=22*dpr;
+    if(e===0) return {x:Math.random()*W, y:Math.random()*m};
+    if(e===1) return {x:W-Math.random()*m, y:Math.random()*H};
+    if(e===2) return {x:Math.random()*W, y:H-Math.random()*m};
+    return {x:Math.random()*m, y:Math.random()*H}; }
+  const P=targets.map(t=>{ const s=borde(); return {
+    x:s.x, y:s.y, tx:t.x, ty:t.y,
+    vx:(Math.random()-0.5)*2.6*dpr, vy:(Math.random()-0.5)*2.6*dpr,
+    ch:chars[(Math.random()*chars.length)|0], delay:Math.random()*0.55 }; });
+
+  ctx.font=`700 ${Math.max(9,11*dpr)}px ${FONT}`; ctx.textAlign="center"; ctx.textBaseline="middle";
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const WANDER=1100, CONVERGE=1500, HOLD=650;
+  let raf, T0=performance.now();
+
+  function cerrar(){ cancelAnimationFrame(raf); wrap.classList.add("hide"); setTimeout(()=>wrap.remove(),650); }
+  wrap.addEventListener("click", cerrar);
+
+  function frame(now){
+    const t=now-T0;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle="#0a0a0a";
+    if(t<WANDER){
+      for(const p of P){ p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1;
+        ctx.fillText(p.ch,p.x,p.y); }
+    }else{
+      const k=Math.min(1,(t-WANDER)/CONVERGE), e=1-Math.pow(1-k,3);
+      for(const p of P){ const kk=Math.max(0,Math.min(1,(e-p.delay)/(1-p.delay)));
+        p.x+=(p.tx-p.x)*0.12*(0.4+kk); p.y+=(p.ty-p.y)*0.12*(0.4+kk);
+        ctx.fillText(p.ch,p.x,p.y); }
+      if(t>WANDER+CONVERGE+HOLD){ cerrar(); return; }
+    }
+    raf=requestAnimationFrame(frame);
+  }
+  if(reduce){ ctx.fillStyle="#0a0a0a"; for(const p of P) ctx.fillText(p.ch,p.tx,p.ty); setTimeout(cerrar,900); }
+  else raf=requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>
