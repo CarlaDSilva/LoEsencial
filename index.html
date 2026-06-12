@@ -82,9 +82,14 @@
   .seg.special .body{font-family:var(--sans); font-weight:500; font-size:17.5px;}
   .seg .ctx{font-size:16px; color:var(--muted); font-style:italic; margin-top:8px;}
   .seg .src{font-family:var(--sans); font-size:11.5px; letter-spacing:.03em; color:var(--muted); margin-top:10px;}
+  .srclink{color:var(--accent); text-decoration:underline; cursor:pointer; white-space:nowrap;}
+  .urlinput{flex:1; font-family:var(--sans); font-size:16px; background:var(--surface2); color:var(--text); border:1px solid var(--line); border-radius:9px; padding:10px 12px;}
+  .reloadbtn{font-family:var(--sans); font-size:14px; font-weight:600; color:var(--bg); background:var(--accent); border:none; border-radius:9px; padding:10px 16px; cursor:pointer;}
   .deep{margin-top:11px; padding:12px 14px; border-left:3px solid var(--accent); background:var(--surface); font-size:16px; display:none;}
   .deep.open{display:block;}
   .deep .lbl{display:block; font-family:var(--sans); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
+  .hear{display:inline-flex; align-items:center; gap:7px; margin-top:12px; font-family:var(--sans); font-size:12.5px; font-weight:600; color:var(--accent); background:transparent; border:1px solid var(--accent); border-radius:18px; padding:6px 13px; cursor:pointer;}
+  .hear svg{display:block;}
   .seg.live{opacity:1;}
   .seg.live .marker{color:var(--accent);}
   .seg.spoken{opacity:.45;}
@@ -198,6 +203,15 @@
         <div class="sw on" data-flag="velInteligente"></div>
       </div>
 
+      <h2>Fuente de noticias</h2>
+      <div class="vnote">Pega la URL de tu Worker de Cloudflare para recibir noticias reales. Si lo dejas vacío, se muestran ejemplos.</div>
+      <div class="row" style="border:none;">
+        <input type="url" id="workerUrl" class="urlinput" placeholder="https://…workers.dev" inputmode="url" autocapitalize="off" autocorrect="off">
+      </div>
+      <div class="row" style="border:none; padding-top:2px;">
+        <button id="reloadNews" class="reloadbtn" type="button">Actualizar noticias</button>
+      </div>
+
       <h2>Voz del dispositivo</h2>
       <div class="vnote" id="vnote"></div>
       <div class="row" style="border:none;">
@@ -233,6 +247,7 @@ const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="current
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.3"/><rect x="14" y="5" width="4" height="14" rx="1.3"/></svg>';
 const ICON_SETTINGS = '<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor" aria-hidden="true"><path d="M3 7h7.2a3 3 0 0 1 5.6 0H21v2h-5.2a3 3 0 0 1-5.6 0H3V7zm0 8h5.2a3 3 0 0 1 5.6 0H21v2h-7.2a3 3 0 0 1-5.6 0H3v-2z"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
+const ICON_HEAR = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.4 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
 
 /* ====== noticias de EJEMPLO (extra = explicación a fondo del botón "?") ====== */
 const DATA = [
@@ -259,7 +274,7 @@ const DATA = [
     texto:"Un informe registra el mayor avance anual en energía renovable instalada hasta la fecha, con la solar a la cabeza. La transición avanza más rápido de lo que sugieren las discusiones diarias.",
     extra:"'Capacidad instalada' es cuánta energía se podría generar como máximo, no la que realmente se produce: el sol no brilla de noche ni el viento sopla siempre. Aun así, batir el récord de instalación marca la dirección, porque esa capacidad se va aprovechando mejor a medida que avanza el almacenamiento en baterías.",
     fuentes:["AIE","The Guardian"] },
-  { id:"ga1", tema:"galicia", tono:"neutra", peso:"light", rel:60,
+  { id:"ga1", tema:"vigo", tono:"neutra", peso:"light", rel:60,
     texto:"En Vigo, el plan para reorganizar las líneas de Vitrasa entra en su fase de alegaciones: hay cambios de recorrido en varias zonas y los vecinos tienen un mes para opinar. Traducción: revisa tu parada antes de darla por sentada.",
     extra:"Una fase de alegaciones es el periodo en el que el ayuntamiento publica el plan y la gente puede presentar por escrito objeciones o propuestas antes de que sea definitivo. No es una formalidad vacía: si suficientes vecinos señalan un recorrido mal pensado, todavía puede cambiarse antes de aprobarlo.",
     fuentes:["Faro de Vigo"] },
@@ -270,18 +285,37 @@ const DATA = [
   { id:"de1", tema:"deportes", tono:"neutra", peso:"light", rel:48,
     texto:"Jornada tranquila de liga, con un único resultado que mueve la tabla por arriba. Nada que no se pueda resumir en una frase, así que ya está resumido.",
     extra:"Ese único resultado reordena la zona alta porque acerca o aleja a los equipos en la pelea por el título; el resto de la jornada no movió nada sustancial, así que no hay mucho más que contar sin rellenar por rellenar.",
-    fuentes:["Marca"] }
+    fuentes:["Marca"] },
+  { id:"if1", tema:"informatica", tono:"neutra", peso:"light", rel:64,
+    texto:"Sale una nueva versión de un framework muy usado para crear aplicaciones web, con mejoras de rendimiento y herramientas pensadas también para quien programa desde dispositivos sin terminal. Para proyectos pequeños cambia poco; para los grandes, ahorra bastante tiempo de compilación.",
+    ctx:"Un framework es un conjunto de herramientas y reglas que acelera el desarrollo y evita programar cada pieza desde cero.",
+    extra:"Las versiones nuevas de un framework suelen traer dos cosas a la vez: mejoras internas que no ves pero que hacen la app más rápida, y cambios en la forma de escribir el código que pueden obligar a adaptar proyectos antiguos. Por eso conviene leer las notas de la versión antes de actualizar algo que ya está en producción.",
+    fuentes:["GitHub","MDN"] },
+  { id:"mo1", tema:"morrazo", tono:"neutra", peso:"light", rel:55,
+    texto:"En O Morrazo refuerzan en hora punta la línea de transporte que conecta las villas de la comarca, tras las quejas por saturación. Pequeño, pero se nota si dependes de ese autobús cada mañana.",
+    extra:"La comarca de O Morrazo agrupa, entre otras, a Cangas, Moaña, Bueu y Marín, muy conectadas entre sí y con Vigo por mar y carretera. Los ajustes de frecuencias en hora punta son de esas noticias locales que no salen en los grandes titulares pero cambian el día a día de quien se mueve a diario.",
+    fuentes:["Faro de Vigo","La Voz de Galicia"] },
+  { id:"bu1", tema:"bueu", tono:"positiva", peso:"light", rel:50,
+    texto:"Bueu prepara la temporada con la vista puesta en sus playas y en la lonja, motor del pueblo. Nada estridente: la rutina de un sitio que funciona.",
+    extra:"La lonja de Bueu es uno de los puntos de venta de pescado fresco de la ría, y buena parte de la economía local gira en torno a la pesca y al turismo de costa. Las noticias 'tranquilas' de un pueblo así suelen ser, en realidad, señal de que las cosas marchan.",
+    fuentes:["Faro de Vigo"] },
+  { id:"gal1", tema:"galicia", tono:"neutra", peso:"heavy", rel:62,
+    texto:"La Xunta presenta su plan para mejorar la conexión ferroviaria de la comunidad, con plazos que, como casi siempre en infraestructuras, conviene tomarse con prudencia. Habrá que ver cuánto se cumple.",
+    ctx:"Las grandes obras de tren suelen anunciarse con fechas optimistas que después se reajustan varias veces.",
+    extra:"Los planes ferroviarios mezclan competencias del Gobierno central y de la comunidad, financiación europea y obras técnicamente complejas, y por eso los plazos iniciales rara vez se cumplen al pie de la letra. No significa que la obra no se haga, sino que el calendario real suele estirarse.",
+    fuentes:["La Voz de Galicia","RTVE"] }
 ];
 
 const TEMAS = {
-  ciencia:"Ciencia", tecnologia:"Tecnología", economia:"Economía",
-  cultura:"Cultura", medioambiente:"Medio ambiente", deportes:"Deportes",
-  internacional:"Internacional", galicia:"Galicia / Vigo"
+  ciencia:"Ciencia", tecnologia:"Tecnología", informatica:"Informática",
+  economia:"Economía", cultura:"Cultura", medioambiente:"Medio ambiente",
+  deportes:"Deportes", internacional:"Internacional", españa:"España",
+  galicia:"Galicia", vigo:"Vigo", morrazo:"O Morrazo", bueu:"Bueu"
 };
 const HIDE = new Set(["internacional","politica","sucesos"]);
 const TONO_COLOR = { positiva:"var(--pos)", neutra:"var(--neu)", negativa:"var(--neg)" };
 const TONO_LABEL = { positiva:"Positiva", neutra:"Neutra", negativa:"Negativa" };
-const DUR_BLOCKS = { 1:1, 3:2, 5:3, 10:5, 15:7, 20:8 };
+const DUR_BLOCKS_DEPRECATED = null;
 const CONNECTORS = ["", "Cambiamos de tema.", "En otro orden de cosas.", "Seguimos.", "Mientras tanto.", "Y antes de cerrar,"];
 const CONNECTORS_IRONIA = ["", "Cómo no, otra cosa más.", "Por si te faltaban motivos,", "Atención, que viene una de las buenas.", "Y mientras nadie miraba,", "Para rematar la función,"];
 
@@ -292,18 +326,27 @@ const store = {
 };
 const cfg = store.get("loesencial_cfg", {
   dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1,
-  tono:"calmado", voiceURI:"", intereses:["ciencia","tecnologia","economia","cultura","medioambiente","galicia"]
+  tono:"calmado", voiceURI:"", workerUrl:"", intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia"]
 });
 
 /* ====== generación del guion (reglas, sin IA) ====== */
 function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 function generarGuion(){
-  let items = DATA.filter(n => cfg.intereses.includes(n.tema));
+  let items = NOTICIAS.filter(n => cfg.intereses.includes(n.tema));
   if(cfg.noAmargues) items = items.filter(n => !HIDE.has(n.tema) && n.tono!=="negativa");
   items.sort((a,b)=>b.rel-a.rel);
-  let n = DUR_BLOCKS[cfg.dur] || 3;
-  if(cfg.soloImportante) n = Math.min(n,3);
-  items = items.slice(0,n);
+  if(cfg.soloImportante){
+    items = items.slice(0,3);
+  } else {
+    const budget = cfg.dur * 150;            // ~150 palabras habladas por minuto
+    const sel=[]; let w=0;
+    for(const it of items){
+      sel.push(it);
+      w += (it.texto+" "+(it.ctx||"")).split(/\s+/).length;
+      if(w>=budget) break;
+    }
+    items = sel;
+  }
 
   const cuenta = {positiva:0,neutra:0,negativa:0};
   items.forEach(i=>cuenta[i.tono]++);
@@ -325,6 +368,7 @@ function generarGuion(){
 /* ====== render ====== */
 const $ = s => document.querySelector(s);
 let SEGMENTS = [];
+let NOTICIAS = DATA.slice();   // se reemplaza por las reales si hay Worker
 
 function rateBase(){ return ({serio:.95, calmado:.93, analitico:1.0, ligero:1.06, ironico:.98})[cfg.tono] || .95; }
 function pitchFor(){ return cfg.tono==="ligero"?1.05 : cfg.tono==="serio"?0.95 : cfg.tono==="ironico"?1.03 : 1.0; }
@@ -346,10 +390,11 @@ function render(){
     const seg = { el, text, rate };
     el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
     if(opts.extra){
-      const ask=el.querySelector(".ask"), deep=el.querySelector(".deep");
+      const ask=el.querySelector(".ask"), deep=el.querySelector(".deep"), hear=el.querySelector(".hear");
       if(ask && deep){
         ask.addEventListener("click", ev=>{ ev.stopPropagation(); const o=deep.classList.toggle("open"); ask.classList.toggle("on",o); });
         deep.addEventListener("click", ev=>ev.stopPropagation());
+        if(hear) hear.addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(opts.extra); });
       }
     }
     script.appendChild(el);
@@ -365,18 +410,18 @@ function render(){
     const conn = conns[i % conns.length];
     const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${it.texto}${it.ctx? " "+it.ctx : ""}`;
     let html = `<div class="head">
-        <span class="dot" style="background:${TONO_COLOR[it.tono]}"></span>
+        <span class="dot" style="background:${TONO_COLOR[it.tono]||"var(--neu)"}"></span>
         <span class="marker">${TEMAS[it.tema]||it.tema}</span>
-        <button class="ask" aria-label="Explicar más a fondo">?</button></div>
+        ${it.extra?'<button class="ask" aria-label="Explicar más a fondo">?</button>':''}</div>
         <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${it.texto}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
-    html += `<div class="src">Contrastado en ${listar(it.fuentes)}.</div>`;
-    if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}</div>`;
-    mk(html, spoken, tasaPara(it), {extra:!!it.extra});
+    const fuentesTxt = (it.fuentes&&it.fuentes.length) ? `Contrastado en ${listar(it.fuentes)}.` : "";
+    const link = it.url ? ` <a class="srclink" href="${it.url}" target="_blank" rel="noopener">Leer la noticia</a>` : "";
+    if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
+    if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    mk(html, spoken, tasaPara(it), {extra:it.extra});
   });
 
-  mk(`<div class="head"><span class="marker">Balance</span></div><div class="body">${g.resumen}</div>`,
-     g.resumen, tasaPara(null), {special:true});
   mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
      g.cierre, tasaPara(null), {special:true});
 
@@ -406,6 +451,36 @@ function renderTono(c, total){
 
 function listar(a){ return a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ")+" y "+a[a.length-1]; }
 function fechaLarga(){ return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"}); }
+
+function mapItem(r){
+  return {
+    id: r.id || r.url || (r.titulo||r.texto||"").slice(0,24),
+    tema: r.tema || "internacional",
+    tono: r.tono || "neutra",
+    peso: r.peso || ((r.texto||"").length>180 ? "heavy" : "light"),
+    rel: (r.rel!=null) ? r.rel : 50,
+    texto: r.texto || r.titulo || "",
+    ctx: r.ctx || "", extra: r.extra || "", cont: r.cont || "",
+    fuentes: r.fuentes || (r.fuente ? [r.fuente] : []),
+    url: r.url || ""
+  };
+}
+async function cargarNoticias(){
+  if(!cfg.workerUrl){ NOTICIAS = DATA.slice(); render(); return; }
+  $("#nowTitle").textContent = "Buscando noticias…";
+  try{
+    const res = await fetch(cfg.workerUrl, { headers:{ "Accept":"application/json" } });
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data = await res.json();
+    const arr = Array.isArray(data) ? data : (data.items||[]);
+    if(!arr.length) throw new Error("sin noticias");
+    NOTICIAS = arr.map(mapItem);
+    render();
+  }catch(e){
+    NOTICIAS = DATA.slice(); render();
+    $("#nowTitle").textContent = "No se pudo cargar — mostrando ejemplos";
+  }
+}
 
 /* ====== voz (Web Speech) — con guarda de generación para evitar bucles ====== */
 let voices=[], voz=null, idx=-1, queue=[], qi=0, playing=false, gen=0;
@@ -494,6 +569,27 @@ function jumpTo(i){
   startSpeak();
 }
 
+/* leer en voz alta la explicación del botón "?" (aparte del informativo) */
+function speakAside(text){
+  if(!window.speechSynthesis || !text) return;
+  if(playing) pause();
+  const myGen = ++gen;
+  speechSynthesis.cancel();
+  $("#nowTitle").textContent = "Explicando a fondo…";
+  const frases = text.match(/[^.!?]+[.!?]*/g) || [text];
+  let j=0;
+  (function next(){
+    if(myGen!==gen) return;
+    if(j>=frases.length){ if($("#nowTitle").textContent==="Explicando a fondo…") $("#nowTitle").textContent="Informativo listo"; return; }
+    const u=new SpeechSynthesisUtterance(frases[j].trim());
+    if(voz){ u.voice=voz; u.lang=voz.lang||"es-ES"; } else u.lang="es-ES";
+    u.rate=clampRate(0.96*(cfg.speed||1)); u.pitch=pitchFor();
+    u.onend=()=>{ if(myGen!==gen) return; j++; next(); };
+    u.onerror=()=>{ if(myGen!==gen) return; j++; next(); };
+    setTimeout(()=>{ if(myGen===gen) speechSynthesis.speak(u); }, j===0?90:0);
+  })();
+}
+
 /* ====== ondas ====== */
 (function(){ const w=$("#wave"); let h=""; for(let i=0;i<42;i++){ h+=`<i style="animation-delay:${(i*55)%900}ms"></i>`; } w.innerHTML=h; })();
 
@@ -556,12 +652,18 @@ const speed=$("#speed"), speedVal=$("#speedVal");
 speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"×";
 speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; save(); };
 
+const workerInput=$("#workerUrl"); workerInput.value=cfg.workerUrl||"";
+function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); }
+workerInput.onchange=aplicarWorker;
+$("#reloadNews").onclick=aplicarWorker;
+
 function save(){ store.set("loesencial_cfg", cfg); }
 
 /* ====== arranque ====== */
 $("#fecha").textContent = new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
 $("#play").onclick = ()=> playing ? pause() : play();
 render();
+cargarNoticias();
 
 /* ====== pantalla de carga: letras negras que convergen y se vuelven nítidas ====== */
 (function(){
@@ -601,7 +703,7 @@ render();
   const particleFont=fontAt(Math.max(9,11*dpr));
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const WANDER=1000, CONVERGE=1500, HOLD=750;
+  const WANDER=1000, CONVERGE=1900, HOLD=950;
   let raf, T0=performance.now();
 
   function cerrar(){ cancelAnimationFrame(raf); wrap.classList.add("hide"); setTimeout(()=>wrap.remove(),650); }
