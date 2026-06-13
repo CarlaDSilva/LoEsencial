@@ -11,7 +11,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#E8E2D2">
+<meta name="theme-color" content="#ECE7D9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lo Esencial">
@@ -20,7 +20,7 @@
 <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Lo%20Esencial%22%2C%22short_name%22%3A%22Lo%20Esencial%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23E8E2D2%22%2C%22theme_color%22%3A%22%23E8E2D2%22%7D">
 <style>
   :root{
-    --bg:#E8E2D2; --surface:#E1DAC7; --surface2:#D5CDB8;
+    --bg:#ECE7D9; --surface:#E1DAC7; --surface2:#D5CDB8;
     --text:#1B1712; --muted:#6A6051; --line:rgba(27,23,18,.22);
     --accent:#7C2436;            /* burdeos */
     --pos:#6C7838; --neu:#8A8170; --neg:#9C5B3B;   /* oliva / gris / siena */
@@ -32,7 +32,7 @@
   body{
     font-family:var(--serif); line-height:1.62; color:var(--text);
     background-color:var(--bg);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
     padding:max(env(safe-area-inset-top),18px) 0 120px;
     -webkit-font-smoothing:antialiased;
   }
@@ -90,6 +90,7 @@
   .deep .lbl{display:block; font-family:var(--sans); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
   .hear{display:inline-flex; align-items:center; gap:7px; margin-top:12px; font-family:var(--sans); font-size:12.5px; font-weight:600; color:var(--accent); background:transparent; border:1px solid var(--accent); border-radius:18px; padding:6px 13px; cursor:pointer;}
   .hear svg{display:block;}
+  .cargando{color:var(--muted); font-style:italic;}
   .seg.live{opacity:1;}
   .seg.live .marker{color:var(--accent);}
   .seg.spoken{opacity:.45;}
@@ -330,10 +331,51 @@ const cfg = store.get("loesencial_cfg", {
 });
 
 /* ====== generación del guion (reglas, sin IA) ====== */
+/* ====== limpieza y clasificación de noticias reales ====== */
+const JUNK_RE = /(en directo|en vivo|minuto a minuto|comprobar|euromill|loter[ií]a|sorteo|hor[oó]scopo|quiniela|primitiva|bonoloto|cup[oó]n|resultados del sorteo|c[oó]mo comprar)/i;
+const SENSIBLE_RE = /(violaci|violó|agresi[oó]n sexual|abuso|asesinat|descuartiz|pederast|maltrato|suicid|crimen|apuñal|pornograf)/i;
+const NEG_RE = /(muert|fallec|asesin|viola|agresi|abuso|herid|v[ií]ctima|c[aá]rcel|prisi[oó]n|condena|senten|fiscal[ií]a|denuncia|dopaje|sanci[oó]n|crisis|guerra|ataqu|conflicto|incendio|accidente|desplaz|recesi[oó]n|despido|temporal|alerta|amenaza|tragedia|detenid|tirote)/i;
+const POS_RE = /(acuerdo|r[eé]cord|avance|mejora|premio|rescate|descubr|[eé]xito|crece|recuperaci|inaugura|hist[oó]rico|logro|soluci[oó]n|campe[oó]n|m[aá]ximos|estrena)/i;
+function clasificar(t){ const s=(t||"").toLowerCase(); if(NEG_RE.test(s)) return "negativa"; if(POS_RE.test(s)) return "positiva"; return "neutra"; }
+function esJunk(t){ return JUNK_RE.test(t||""); }
+function esSensible(t){ return SENSIBLE_RE.test(t||""); }
+function limpiarTitulo(t){ return (t||"").split(/\s[|·]\s/)[0].replace(/\s+/g," ").trim(); }
+
+/* ====== variedad de aperturas y cierres ====== */
+function pick(a){ return a[(Math.random()*a.length)|0]; }
+const FIRMAS = {
+  normal:[
+    `Buenos días. {F}. Esto es ${NOMBRE}: lo que ha pasado hoy, sin el ruido de costumbre.`,
+    `Hola, muy buenas. Hoy es {F}. Aquí ${NOMBRE}, las noticias que importan y poco más.`,
+    `Arrancamos el día. {F}. Te pongo al corriente con ${NOMBRE}: lo justo, sin paja.`,
+    `{F}. Bienvenida a ${NOMBRE}. Esto es lo que de verdad ha pasado.`
+  ],
+  ironico:[
+    `Buenos días, si es que lo son. {F}. Esto es ${NOMBRE}: las noticias de hoy, con el ruido retirado y algo de mala leche.`,
+    `Otra vuelta al sol. {F}. ${NOMBRE} al habla, con lo que pasó y un par de cejas levantadas.`,
+    `Buenas. {F}. Aquí ${NOMBRE}: la actualidad, servida con una sonrisa de medio lado.`,
+    `{F}. ${NOMBRE}, tu dosis diaria de realidad con guarnición de ironía.`
+  ]
+};
+const CIERRES = {
+  normal:[
+    "Y hasta aquí. Mañana habrá más, probablemente menos de lo que parezca. Buen día.",
+    "Eso es todo por hoy. Cuídate, y nos escuchamos mañana.",
+    "Fin del repaso. Ya estás al día; el resto es ruido. Hasta mañana.",
+    "Hemos terminado. Que el día te trate bien."
+  ],
+  ironico:[
+    "Y eso es todo. El mundo girará igual lo escuches o no, pero ahora estás informada. Hasta mañana.",
+    "Hasta aquí. Si mañana el mundo sigue en pie, te lo cuento. Descansa.",
+    "Cerramos. Ya tienes munición para las conversaciones de hoy. Adiós.",
+    "Fin. La realidad seguirá ahí mañana, puntual y sin avisar. Hasta entonces."
+  ]
+};
+
 function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 function generarGuion(){
   let items = NOTICIAS.filter(n => cfg.intereses.includes(n.tema));
-  if(cfg.noAmargues) items = items.filter(n => !HIDE.has(n.tema) && n.tono!=="negativa");
+  if(cfg.noAmargues) items = items.filter(n => n.tono!=="negativa" && !esSensible((n.titulo||"")+" "+(n.texto||"")));
   items.sort((a,b)=>b.rel-a.rel);
   if(cfg.soloImportante){
     items = items.slice(0,3);
@@ -351,16 +393,12 @@ function generarGuion(){
   const cuenta = {positiva:0,neutra:0,negativa:0};
   items.forEach(i=>cuenta[i.tono]++);
   const iron = cfg.tono==="ironico";
+  const key = iron ? "ironico" : "normal";
 
-  const firma = iron
-    ? `Buenos días, si es que lo son. ${cap(fechaLarga())}. Esto es ${NOMBRE}: las noticias de hoy, con el ruido ya retirado y un poco de mala leche incluida.`
-    : `Buenos días. ${cap(fechaLarga())}. Esto es ${NOMBRE}: lo que ha pasado hoy, contado en ${cfg.dur} ${cfg.dur===1?"minuto":"minutos"} y sin el ruido de costumbre.`;
+  const firma = pick(FIRMAS[key]).replace("{F}", cap(fechaLarga()));
   const dominante = Object.keys(cuenta).sort((a,b)=>cuenta[b]-cuenta[a])[0] || "neutra";
   let resumen = `El balance del día es mayormente ${TONO_LABEL[dominante].toLowerCase()}: ${cuenta.positiva} positivas, ${cuenta.neutra} neutras y ${cuenta.negativa} negativas.`;
-  if(cfg.noAmargues) resumen += " Hoy te hemos ahorrado lo más áspero.";
-  const cierre = iron
-    ? "Y eso es todo. El mundo girará exactamente igual lo escuches o no, pero al menos ahora estás informada. Hasta mañana."
-    : "Y hasta aquí. Mañana habrá más, aunque probablemente menos de lo que parezca. Que tengas buen día.";
+  const cierre = pick(CIERRES[key]);
 
   return { firma, items, resumen, cierre, cuenta };
 }
@@ -389,12 +427,17 @@ function render(){
     el.innerHTML = html;
     const seg = { el, text, rate };
     el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
-    if(opts.extra){
-      const ask=el.querySelector(".ask"), deep=el.querySelector(".deep"), hear=el.querySelector(".hear");
+    if(opts.askable){
+      const ask=el.querySelector(".ask"), deep=el.querySelector(".deep");
       if(ask && deep){
-        ask.addEventListener("click", ev=>{ ev.stopPropagation(); const o=deep.classList.toggle("open"); ask.classList.toggle("on",o); });
         deep.addEventListener("click", ev=>ev.stopPropagation());
-        if(hear) hear.addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(opts.extra); });
+        ask.addEventListener("click", ev=>{
+          ev.stopPropagation();
+          const o=deep.classList.toggle("open"); ask.classList.toggle("on",o);
+          if(o && !opts.extra && !deep.dataset.loaded && cfg.workerUrl) fetchExplica(opts.fetchText, deep);
+        });
+        const hear=el.querySelector(".hear");
+        if(hear && opts.extra) hear.addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(opts.extra); });
       }
     }
     script.appendChild(el);
@@ -405,21 +448,24 @@ function render(){
   mk(`<div class="head"><span class="marker">Apertura</span></div><div class="body">${g.firma}</div>`,
      g.firma, tasaPara(null), {special:true});
 
-  const conns = cfg.tono==="ironico" ? CONNECTORS_IRONIA : CONNECTORS;
+  const conns = (cfg.tono==="ironico" ? CONNECTORS_IRONIA : CONNECTORS).slice(1);
+  const offC = (Math.random()*conns.length)|0;
   g.items.forEach((it,i)=>{
-    const conn = conns[i % conns.length];
+    const conn = i===0 ? "" : conns[(i-1+offC) % conns.length];
     const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${it.texto}${it.ctx? " "+it.ctx : ""}`;
+    const askable = !!(it.extra || cfg.workerUrl);
     let html = `<div class="head">
         <span class="dot" style="background:${TONO_COLOR[it.tono]||"var(--neu)"}"></span>
         <span class="marker">${TEMAS[it.tema]||it.tema}</span>
-        ${it.extra?'<button class="ask" aria-label="Explicar más a fondo">?</button>':''}</div>
+        ${askable?'<button class="ask" aria-label="Explicar más a fondo">?</button>':''}</div>
         <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${it.texto}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
     const fuentesTxt = (it.fuentes&&it.fuentes.length) ? `Contrastado en ${listar(it.fuentes)}.` : "";
     const link = it.url ? ` <a class="srclink" href="${it.url}" target="_blank" rel="noopener">Leer la noticia</a>` : "";
     if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
     if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
-    mk(html, spoken, tasaPara(it), {extra:it.extra});
+    else if(askable) html += `<div class="deep"><span class="lbl">Más a fondo</span><span class="cargando">Pulsa el signo de interrogación para que te lo expliquen.</span></div>`;
+    mk(html, spoken, tasaPara(it), {askable, extra:it.extra, fetchText:(it.titulo?it.titulo+". ":"")+it.texto});
   });
 
   mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
@@ -453,17 +499,43 @@ function listar(a){ return a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ")+"
 function fechaLarga(){ return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"}); }
 
 function mapItem(r){
+  const tituloRaw = (r.titulo || r.texto || "").trim();
+  const titulo = limpiarTitulo(tituloRaw);
+  if(!titulo || esJunk(titulo)) return null;             // fuera sorteos, directos, etc.
+  let desc = (r.texto || "");
+  if(desc.toLowerCase().startsWith(tituloRaw.toLowerCase().slice(0,20))) desc = desc.slice(tituloRaw.length);
+  desc = desc.replace(/^[.\s|·–-]+/,"").trim();
+  const frase = (desc.match(/[^.!?]+[.!?]/) || [""])[0].trim();   // primera frase completa
+  const limpia = (frase && !/…$/.test(frase) && frase.length>18) ? frase : "";
+  const texto = limpia ? `${titulo}. ${limpia}` : `${titulo}.`;
   return {
-    id: r.id || r.url || (r.titulo||r.texto||"").slice(0,24),
+    id: r.url || titulo.slice(0,30),
     tema: r.tema || "internacional",
-    tono: r.tono || "neutra",
-    peso: r.peso || ((r.texto||"").length>180 ? "heavy" : "light"),
+    tono: clasificar(titulo + " " + desc),
+    peso: texto.length>170 ? "heavy" : "light",
     rel: (r.rel!=null) ? r.rel : 50,
-    texto: r.texto || r.titulo || "",
-    ctx: r.ctx || "", extra: r.extra || "", cont: r.cont || "",
+    texto, titulo,
+    ctx:"", extra:"", cont:"",
     fuentes: r.fuentes || (r.fuente ? [r.fuente] : []),
     url: r.url || ""
   };
+}
+async function fetchExplica(texto, deepEl){
+  if(deepEl.dataset.loaded) return;
+  deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">Pensando…</span>`;
+  try{
+    const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+    const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420));
+    const r = await fetch(u, { headers:{ "Accept":"application/json" } });
+    const d = await r.json();
+    const txt = (d.explica||"").trim();
+    if(!txt) throw new Error("vacío");
+    deepEl.dataset.loaded = "1";
+    deepEl.innerHTML = `<span class="lbl">Más a fondo</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
+    deepEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
+  }catch(e){
+    deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">No se pudo generar la explicación ahora mismo.</span>`;
+  }
 }
 async function cargarNoticias(){
   if(!cfg.workerUrl){ NOTICIAS = DATA.slice(); render(); return; }
@@ -474,7 +546,13 @@ async function cargarNoticias(){
     const data = await res.json();
     const arr = Array.isArray(data) ? data : (data.items||[]);
     if(!arr.length) throw new Error("sin noticias");
-    NOTICIAS = arr.map(mapItem);
+    const vistos = new Set();
+    NOTICIAS = arr.map(mapItem).filter(it => {
+      if(!it) return false;
+      const k = it.titulo.toLowerCase().slice(0,40);
+      if(vistos.has(k)) return false; vistos.add(k); return true;
+    });
+    if(!NOTICIAS.length) throw new Error("todo filtrado");
     render();
   }catch(e){
     NOTICIAS = DATA.slice(); render();
@@ -684,9 +762,9 @@ cargarNoticias();
   o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle"; o.font=fontAt(fs);
   while(o.measureText(TEXT).width>W*0.84 && fs>10){ fs*=0.94; o.font=fontAt(fs); }
   o.fillText(TEXT, W/2, H/2);
-  const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(5, Math.round(6*dpr));
+  const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(3, Math.round(3*dpr));
   for(let y=0;y<H;y+=gap) for(let x=0;x<W;x+=gap) if(d[(y*W+x)*4+3]>128) pts.push({x,y});
-  let targets=pts; const CAP=460;
+  let targets=pts; const CAP=1000;
   if(targets.length>CAP){ const st=targets.length/CAP, t=[]; for(let i=0;i<targets.length;i+=st) t.push(targets[Math.floor(i)]); targets=t; }
 
   const chars="loesencialLOESENCIAL".split("");
@@ -697,13 +775,13 @@ cargarNoticias();
     return {x:Math.random()*m, y:Math.random()*H}; }
   const P=targets.map(t=>{ const s=borde(); return {
     x:s.x, y:s.y, tx:t.x, ty:t.y,
-    vx:(Math.random()-0.5)*2.6*dpr, vy:(Math.random()-0.5)*2.6*dpr,
-    ch:chars[(Math.random()*chars.length)|0], delay:Math.random()*0.5 }; });
+    vx:(Math.random()-0.5)*2.1*dpr, vy:(Math.random()-0.5)*2.1*dpr,
+    ch:chars[(Math.random()*chars.length)|0], delay:Math.random()*0.55 }; });
 
-  const particleFont=fontAt(Math.max(9,11*dpr));
+  const particleFont=fontAt(Math.max(10,12*dpr));
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const WANDER=1000, CONVERGE=1900, HOLD=950;
+  const WANDER=900, CONVERGE=2100, HOLD=1100;
   let raf, T0=performance.now();
 
   function cerrar(){ cancelAnimationFrame(raf); wrap.classList.add("hide"); setTimeout(()=>wrap.remove(),650); }
@@ -719,13 +797,14 @@ cargarNoticias();
         ctx.fillText(p.ch,p.x,p.y); }
     }else{
       const k=Math.min(1,(t-WANDER)/CONVERGE), e=1-Math.pow(1-k,3);
-      solid=Math.max(0,Math.min(1,(e-0.5)/0.5));
-      ctx.globalAlpha=1-0.75*solid;
+      solid=Math.max(0,Math.min(1,(e-0.55)/0.45));
+      // silueta muy tenue debajo, solo para que el ojo lea la palabra
+      if(solid>0){ ctx.globalAlpha=solid*0.40; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
+      // las letras, a plena opacidad: la palabra está hecha de ellas
+      ctx.font=particleFont;
       for(const p of P){ const kk=Math.max(0,Math.min(1,(e-p.delay)/(1-p.delay)));
-        p.x+=(p.tx-p.x)*0.12*(0.4+kk); p.y+=(p.ty-p.y)*0.12*(0.4+kk);
+        p.x+=(p.tx-p.x)*0.10*(0.35+kk); p.y+=(p.ty-p.y)*0.10*(0.35+kk);
         ctx.fillText(p.ch,p.x,p.y); }
-      ctx.globalAlpha=1;
-      if(solid>0){ ctx.globalAlpha=solid; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
       if(t>WANDER+CONVERGE+HOLD){ cerrar(); return; }
     }
     raf=requestAnimationFrame(frame);
