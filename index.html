@@ -213,6 +213,10 @@
         <button id="reloadNews" class="reloadbtn" type="button">Actualizar noticias</button>
       </div>
 
+      <h2>Uso de IA</h2>
+      <div class="vnote">El número exacto está en tu panel de Cloudflare; esto es una estimación para que te hagas una idea.</div>
+      <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso todavía.</div></div>
+
       <h2>Voz del dispositivo</h2>
       <div class="vnote" id="vnote"></div>
       <div class="row" style="border:none;">
@@ -390,6 +394,13 @@ function generarGuion(){
     items = sel;
   }
 
+  // agrupar por tema: todas las de España juntas, luego tecnología, etc.
+  const ordenTema = Object.keys(TEMAS);
+  items.sort((a,b)=>{
+    const d = ordenTema.indexOf(a.tema) - ordenTema.indexOf(b.tema);
+    return d!==0 ? d : b.rel-a.rel;
+  });
+
   const cuenta = {positiva:0,neutra:0,negativa:0};
   items.forEach(i=>cuenta[i.tono]++);
   const iron = cfg.tono==="ironico";
@@ -452,20 +463,21 @@ function render(){
   const offC = (Math.random()*conns.length)|0;
   g.items.forEach((it,i)=>{
     const conn = i===0 ? "" : conns[(i-1+offC) % conns.length];
-    const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${it.texto}${it.ctx? " "+it.ctx : ""}`;
+    const cuerpo = it.iaTexto || it.texto;
+    const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${cuerpo}${it.ctx? " "+it.ctx : ""}`;
     const askable = !!(it.extra || cfg.workerUrl);
     let html = `<div class="head">
         <span class="dot" style="background:${TONO_COLOR[it.tono]||"var(--neu)"}"></span>
         <span class="marker">${TEMAS[it.tema]||it.tema}</span>
         ${askable?'<button class="ask" aria-label="Explicar más a fondo">?</button>':''}</div>
-        <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${it.texto}</div>`;
+        <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${cuerpo}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
     const fuentesTxt = (it.fuentes&&it.fuentes.length) ? `Contrastado en ${listar(it.fuentes)}.` : "";
     const link = it.url ? ` <a class="srclink" href="${it.url}" target="_blank" rel="noopener">Leer la noticia</a>` : "";
     if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
     if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
     else if(askable) html += `<div class="deep"><span class="lbl">Más a fondo</span><span class="cargando">Pulsa el signo de interrogación para que te lo expliquen.</span></div>`;
-    mk(html, spoken, tasaPara(it), {askable, extra:it.extra, fetchText:(it.titulo?it.titulo+". ":"")+it.texto});
+    mk(html, spoken, tasaPara(it), {askable, extra:it.extra, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)});
   });
 
   mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
@@ -479,6 +491,7 @@ function render(){
   $("#nowTitle").textContent = "Informativo listo";
 
   stop();
+  mejorarSeleccion(g.items);
 }
 
 function renderTono(c, total){
@@ -498,6 +511,10 @@ function renderTono(c, total){
 function listar(a){ return a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ")+" y "+a[a.length-1]; }
 function fechaLarga(){ return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"}); }
 
+function limpiarResumen(desc){
+  const frases = (desc.match(/[^.!?]+[.!?]/g)||[]).map(s=>s.trim()).filter(s=>!/…$/.test(s) && s.length>15);
+  return frases.slice(0,2).join(" ");
+}
 function mapItem(r){
   const tituloRaw = (r.titulo || r.texto || "").trim();
   const titulo = limpiarTitulo(tituloRaw);
@@ -505,21 +522,27 @@ function mapItem(r){
   let desc = (r.texto || "");
   if(desc.toLowerCase().startsWith(tituloRaw.toLowerCase().slice(0,20))) desc = desc.slice(tituloRaw.length);
   desc = desc.replace(/^[.\s|·–-]+/,"").trim();
-  const frase = (desc.match(/[^.!?]+[.!?]/) || [""])[0].trim();   // primera frase completa
-  const limpia = (frase && !/…$/.test(frase) && frase.length>18) ? frase : "";
-  const texto = limpia ? `${titulo}. ${limpia}` : `${titulo}.`;
+  const resumen = limpiarResumen(desc);
+  const textoLimpio = resumen ? `${titulo}. ${resumen}` : `${titulo}.`;
   return {
     id: r.url || titulo.slice(0,30),
     tema: r.tema || "internacional",
     tono: clasificar(titulo + " " + desc),
-    peso: texto.length>170 ? "heavy" : "light",
+    peso: textoLimpio.length>180 ? "heavy" : "light",
     rel: (r.rel!=null) ? r.rel : 50,
-    texto, titulo,
+    texto: textoLimpio, titulo, descBruta: desc, iaTexto:"",
     ctx:"", extra:"", cont:"",
     fuentes: r.fuentes || (r.fuente ? [r.fuente] : []),
     url: r.url || ""
   };
 }
+/* ====== uso de IA: contador estimado de neuronas (el real está en Cloudflare) ====== */
+const NEURON_EST = 1000; // estimación conservadora por llamada
+function hoyStr(){ return new Date().toISOString().slice(0,10); }
+function neuronas(){ const u = store.get("loesencial_neuronas", {fecha:hoyStr(), n:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.n=0; } return u; }
+function contarIA(llamadas){ const u=neuronas(); u.n += llamadas*NEURON_EST; store.set("loesencial_neuronas", u); pintarNeuronas(); }
+function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = `≈ ${u.n.toLocaleString("es-ES")} neuronas hoy (estimado · tope gratis: 10.000)`; } }
+
 async function fetchExplica(texto, deepEl){
   if(deepEl.dataset.loaded) return;
   deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">Pensando…</span>`;
@@ -528,13 +551,43 @@ async function fetchExplica(texto, deepEl){
     const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420));
     const r = await fetch(u, { headers:{ "Accept":"application/json" } });
     const d = await r.json();
+    contarIA(1);
     const txt = (d.explica||"").trim();
-    if(!txt) throw new Error("vacío");
+    if(!txt){
+      const motivo = d.error ? ` (${String(d.error).slice(0,80)})` : " — revisa que el binding de IA llamado AI esté añadido al Worker";
+      throw new Error("vacío"+motivo);
+    }
     deepEl.dataset.loaded = "1";
     deepEl.innerHTML = `<span class="lbl">Más a fondo</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
     deepEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
   }catch(e){
-    deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">No se pudo generar la explicación ahora mismo.</span>`;
+    deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacío")?String(e.message).slice(5):""}.</span>`;
+  }
+}
+
+/* ====== IA: reescribir/resumir las noticias seleccionadas (sin clickbait) ====== */
+let mejorando=false;
+async function mejorarSeleccion(items){
+  if(!cfg.workerUrl || mejorando) return;
+  const pend = (items||[]).filter(it=>!it.iaTexto && !it.iaFail && it.descBruta!==undefined);
+  if(!pend.length) return;
+  mejorando=true;
+  try{
+    await Promise.all(pend.map(async it=>{
+      try{
+        const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+        const fuente = (it.titulo||"") + ". " + (it.descBruta||"");
+        const u = cfg.workerUrl + sep + "resume=" + encodeURIComponent(fuente.slice(0,500)) + "&tono=" + encodeURIComponent(cfg.tono);
+        const r = await fetch(u, { headers:{ "Accept":"application/json" } });
+        const d = await r.json();
+        const t = (d.texto||"").trim();
+        if(t) it.iaTexto = t; else it.iaFail = true;
+      }catch(e){ it.iaFail = true; }
+    }));
+    contarIA(pend.length);
+  }finally{
+    mejorando=false;
+    if(pend.some(it=>it.iaTexto)) render();
   }
 }
 async function cargarNoticias(){
@@ -740,6 +793,7 @@ function save(){ store.set("loesencial_cfg", cfg); }
 /* ====== arranque ====== */
 $("#fecha").textContent = new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
 $("#play").onclick = ()=> playing ? pause() : play();
+pintarNeuronas();
 render();
 cargarNoticias();
 
@@ -764,11 +818,11 @@ cargarNoticias();
   o.fillText(TEXT, W/2, H/2);
   const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(3, Math.round(3*dpr));
   for(let y=0;y<H;y+=gap) for(let x=0;x<W;x+=gap) if(d[(y*W+x)*4+3]>128) pts.push({x,y});
-  let targets=pts; const CAP=1000;
+  let targets=pts; const CAP=650;
   if(targets.length>CAP){ const st=targets.length/CAP, t=[]; for(let i=0;i<targets.length;i+=st) t.push(targets[Math.floor(i)]); targets=t; }
 
   const chars="loesencialLOESENCIAL".split("");
-  function borde(){ const e=(Math.random()*4)|0, m=22*dpr;
+  function borde(){ const e=(Math.random()*4)|0, m=Math.min(W,H)*0.28;
     if(e===0) return {x:Math.random()*W, y:Math.random()*m};
     if(e===1) return {x:W-Math.random()*m, y:Math.random()*H};
     if(e===2) return {x:Math.random()*W, y:H-Math.random()*m};
