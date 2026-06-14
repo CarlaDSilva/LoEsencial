@@ -203,6 +203,10 @@
         <div><label>Velocidad inteligente</label><div class="hint">Lo ligero, rápido. Lo complejo, más despacio.</div></div>
         <div class="sw on" data-flag="velInteligente"></div>
       </div>
+      <div class="row">
+        <div><label>Saltar muros de pago</label><div class="hint">Abre "Leer la noticia" a través de un archivo público. No siempre funciona. Si un medio te aporta, apóyalo.</div></div>
+        <div class="sw" data-flag="paywall"></div>
+      </div>
 
       <h2>Fuente de noticias</h2>
       <div class="vnote">Pega la URL de tu Worker de Cloudflare para recibir noticias reales. Si lo dejas vacío, se muestran ejemplos.</div>
@@ -214,8 +218,8 @@
       </div>
 
       <h2>Uso de IA</h2>
-      <div class="vnote">El número exacto está en tu panel de Cloudflare; esto es una estimación para que te hagas una idea.</div>
-      <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso todavía.</div></div>
+      <div class="vnote">Aquí solo cuento las consultas a la IA que hace esta app hoy. El consumo real de neuronas se ve en Cloudflare: menú lateral <b>AI</b> → <b>Workers AI</b> (no aparece en Workers &amp; Pages).</div>
+      <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso de IA todavía hoy.</div></div>
 
       <h2>Voz del dispositivo</h2>
       <div class="vnote" id="vnote"></div>
@@ -330,7 +334,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 const cfg = store.get("loesencial_cfg", {
-  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1,
+  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false,
   tono:"calmado", voiceURI:"", workerUrl:"", intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia"]
 });
 
@@ -348,11 +352,25 @@ function limpiarTitulo(t){ return (t||"").split(/\s[|·]\s/)[0].replace(/\s+/g,"
 /* ====== variedad de aperturas y cierres ====== */
 function pick(a){ return a[(Math.random()*a.length)|0]; }
 const FIRMAS = {
-  normal:[
-    `Buenos días. {F}. Esto es ${NOMBRE}: lo que ha pasado hoy, sin el ruido de costumbre.`,
-    `Hola, muy buenas. Hoy es {F}. Aquí ${NOMBRE}, las noticias que importan y poco más.`,
-    `Arrancamos el día. {F}. Te pongo al corriente con ${NOMBRE}: lo justo, sin paja.`,
-    `{F}. Bienvenida a ${NOMBRE}. Esto es lo que de verdad ha pasado.`
+  serio:[
+    `{F}. Esto es ${NOMBRE}. Estas son las noticias principales del día.`,
+    `Buenos días. {F}. Comienza ${NOMBRE} con la información más relevante de la jornada.`,
+    `{F}. Bienvenida a ${NOMBRE}. Le ponemos al corriente de la actualidad.`
+  ],
+  calmado:[
+    `Buenos días. {F}. Esto es ${NOMBRE}: lo que ha pasado hoy, con calma y sin el ruido de costumbre.`,
+    `Hola, muy buenas. Hoy es {F}. Aquí ${NOMBRE}, las noticias que importan, sin prisa.`,
+    `{F}. Respira. Esto es ${NOMBRE}: el día, contado con tranquilidad.`
+  ],
+  analitico:[
+    `{F}. Esto es ${NOMBRE}. Hoy no solo te cuento qué ha pasado, sino por qué importa.`,
+    `Buenos días. {F}. Arranca ${NOMBRE}: las claves del día y lo que hay detrás.`,
+    `{F}. Aquí ${NOMBRE}, desgranando la actualidad pieza a pieza.`
+  ],
+  ligero:[
+    `¡Buenas! {F}. Esto es ${NOMBRE}: el día en versión fácil de digerir.`,
+    `Hola hola. {F}. Aquí ${NOMBRE}, las noticias sin que se te haga bola.`,
+    `{F}. Arrancamos ${NOMBRE} con buen rollo y lo esencial.`
   ],
   ironico:[
     `Buenos días, si es que lo son. {F}. Esto es ${NOMBRE}: las noticias de hoy, con el ruido retirado y algo de mala leche.`,
@@ -362,11 +380,25 @@ const FIRMAS = {
   ]
 };
 const CIERRES = {
-  normal:[
-    "Y hasta aquí. Mañana habrá más, probablemente menos de lo que parezca. Buen día.",
-    "Eso es todo por hoy. Cuídate, y nos escuchamos mañana.",
-    "Fin del repaso. Ya estás al día; el resto es ruido. Hasta mañana.",
-    "Hemos terminado. Que el día te trate bien."
+  serio:[
+    "Esto ha sido todo. Buenos días.",
+    "Hasta aquí la información del día. Gracias por su atención.",
+    "Cerramos el informativo. Que tenga un buen día."
+  ],
+  calmado:[
+    "Y hasta aquí, sin agobios. Mañana habrá más. Cuídate.",
+    "Eso es todo por hoy. Tómatelo con calma y nos escuchamos mañana.",
+    "Fin del repaso. Ya estás al día; lo demás puede esperar. Buen día."
+  ],
+  analitico:[
+    "Hasta aquí las claves de hoy. Mañana veremos cómo evoluciona. Buen día.",
+    "Eso es lo importante y su porqué. Nos escuchamos mañana.",
+    "Cerramos. Con esto tienes el mapa del día. Hasta mañana."
+  ],
+  ligero:[
+    "¡Y ya está! Sin dramas. Mañana más. ¡Que vaya bien!",
+    "Eso es todo, fácil y rápido. Nos vemos mañana.",
+    "Fin. Ya puedes presumir de estar informada. ¡Hasta mañana!"
   ],
   ironico:[
     "Y eso es todo. El mundo girará igual lo escuches o no, pero ahora estás informada. Hasta mañana.",
@@ -412,7 +444,7 @@ function generarGuion(){
   const cuenta = {positiva:0,neutra:0,negativa:0};
   items.forEach(i=>cuenta[i.tono]++);
   const iron = cfg.tono==="ironico";
-  const key = iron ? "ironico" : "normal";
+  const key = FIRMAS[cfg.tono] ? cfg.tono : "calmado";
 
   const firma = pick(FIRMAS[key]).replace("{F}", cap(fechaLarga()));
   const dominante = Object.keys(cuenta).sort((a,b)=>cuenta[b]-cuenta[a])[0] || "neutra";
@@ -481,7 +513,8 @@ function render(){
         <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${cuerpo}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
     const fuentesTxt = (it.fuentes&&it.fuentes.length) ? `Contrastado en ${listar(it.fuentes)}.` : "";
-    const link = it.url ? ` <a class="srclink" href="${it.url}" target="_blank" rel="noopener">Leer la noticia</a>` : "";
+    const destino = (cfg.paywall && it.url) ? ("https://archive.ph/newest/" + it.url) : it.url;
+    const link = it.url ? ` <a class="srclink" href="${destino}" target="_blank" rel="noopener">Leer la noticia</a>` : "";
     if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
     if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
     else if(askable) html += `<div class="deep"><span class="lbl">Más a fondo</span><span class="cargando">Pulsa el signo de interrogación para que te lo expliquen.</span></div>`;
@@ -545,18 +578,17 @@ function mapItem(r){
   };
 }
 /* ====== uso de IA: contador estimado (el real está en Cloudflare) ====== */
-const NEURON_EST = 80; // estimación aproximada por llamada a un modelo pequeño
 function hoyStr(){ return new Date().toISOString().slice(0,10); }
-function neuronas(){ const u = store.get("loesencial_neuronas", {fecha:hoyStr(), n:0, c:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.n=0; u.c=0; } return u; }
-function contarIA(llamadas){ if(!llamadas) return; const u=neuronas(); u.c+=llamadas; u.n+=llamadas*NEURON_EST; store.set("loesencial_neuronas", u); pintarNeuronas(); }
-function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = u.c ? `${u.c} consultas de IA hoy (~${u.n.toLocaleString("es-ES")} neuronas est. · gratis hasta 10.000)` : "Sin uso de IA todavía hoy."; } }
+function neuronas(){ const u = store.get("loesencial_ia_v2", {fecha:hoyStr(), c:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.c=0; } return u; }
+function contarIA(llamadas){ if(!llamadas) return; const u=neuronas(); u.c=(u.c||0)+llamadas; store.set("loesencial_ia_v2", u); pintarNeuronas(); }
+function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = u.c ? `${u.c} ${u.c===1?"consulta":"consultas"} de IA hoy desde esta app.` : "Sin uso de IA todavía hoy."; } }
 
 async function fetchExplica(texto, deepEl){
   if(deepEl.dataset.loaded) return;
   deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">Pensando…</span>`;
   try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
-    const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420));
+    const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
     const r = await fetch(u, { headers:{ "Accept":"application/json" } });
     const d = await r.json();
     const txt = (d.explica||"").trim();
@@ -863,7 +895,7 @@ cargarNoticias();
     }else if(t<T_HOLD_END){
       const k=Math.min(1,(t-WANDER)/CONVERGE), e=1-Math.pow(1-k,3);
       const solid=Math.max(0,Math.min(1,(e-0.55)/0.45));
-      if(solid>0){ ctx.globalAlpha=solid*0.40; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
+      if(solid>0){ ctx.globalAlpha=solid; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
       ctx.font=particleFont;
       for(const p of P){ const kk=Math.max(0,Math.min(1,(e-p.delay)/(1-p.delay)));
         p.x+=(p.tx-p.x)*0.10*(0.35+kk); p.y+=(p.ty-p.y)*0.10*(0.35+kk);
@@ -873,10 +905,9 @@ cargarNoticias();
       const lk=(t-T_HOLD_END)/LIFT, le=1-Math.pow(1-lk,3);
       ctx.globalAlpha=1-le; ctx.font=particleFont;
       for(const p of P) ctx.fillText(p.ch,p.x,p.y);
-      ctx.globalAlpha=0.4+0.6*le;
+      ctx.globalAlpha=1;
       ctx.font=fontAt(fs+(tFs-fs)*le);
       ctx.fillText(TEXT, W/2+(tX-W/2)*le, H/2+(tY-H/2)*le);
-      ctx.globalAlpha=1;
     }else{ cerrar(); return; }
     raf=requestAnimationFrame(frame);
   }
