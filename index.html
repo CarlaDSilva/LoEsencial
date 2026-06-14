@@ -11,7 +11,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#ECE7D9">
+<meta name="theme-color" content="#F3EEE0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lo Esencial">
@@ -20,7 +20,7 @@
 <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Lo%20Esencial%22%2C%22short_name%22%3A%22Lo%20Esencial%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23E8E2D2%22%2C%22theme_color%22%3A%22%23E8E2D2%22%7D">
 <style>
   :root{
-    --bg:#ECE7D9; --surface:#E1DAC7; --surface2:#D5CDB8;
+    --bg:#F3EEE0; --surface:#E1DAC7; --surface2:#D5CDB8;
     --text:#1B1712; --muted:#6A6051; --line:rgba(27,23,18,.22);
     --accent:#7C2436;            /* burdeos */
     --pos:#6C7838; --neu:#8A8170; --neg:#9C5B3B;   /* oliva / gris / siena */
@@ -32,7 +32,7 @@
   body{
     font-family:var(--serif); line-height:1.62; color:var(--text);
     background-color:var(--bg);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
     padding:max(env(safe-area-inset-top),18px) 0 120px;
     -webkit-font-smoothing:antialiased;
   }
@@ -381,18 +381,26 @@ function generarGuion(){
   let items = NOTICIAS.filter(n => cfg.intereses.includes(n.tema));
   if(cfg.noAmargues) items = items.filter(n => n.tono!=="negativa" && !esSensible((n.titulo||"")+" "+(n.texto||"")));
   items.sort((a,b)=>b.rel-a.rel);
+  // selección con variedad: primero la mejor de cada tema, luego rellena por relevancia
+  const porTema = {};
+  items.forEach(it=>{ (porTema[it.tema] = porTema[it.tema]||[]).push(it); });
+  const ronda1 = Object.values(porTema).map(arr=>arr.shift()).sort((a,b)=>b.rel-a.rel);
+  const resto = [].concat(...Object.values(porTema)).sort((a,b)=>b.rel-a.rel);
+  const orden = ronda1.concat(resto);
+
+  let sel;
   if(cfg.soloImportante){
-    items = items.slice(0,3);
+    sel = orden.slice(0,3);
   } else {
     const budget = cfg.dur * 150;            // ~150 palabras habladas por minuto
-    const sel=[]; let w=0;
-    for(const it of items){
+    sel=[]; let w=0;
+    for(const it of orden){
       sel.push(it);
       w += (it.texto+" "+(it.ctx||"")).split(/\s+/).length;
       if(w>=budget) break;
     }
-    items = sel;
   }
+  items = sel;
 
   // agrupar por tema: todas las de España juntas, luego tecnología, etc.
   const ordenTema = Object.keys(TEMAS);
@@ -536,12 +544,12 @@ function mapItem(r){
     url: r.url || ""
   };
 }
-/* ====== uso de IA: contador estimado de neuronas (el real está en Cloudflare) ====== */
-const NEURON_EST = 1000; // estimación conservadora por llamada
+/* ====== uso de IA: contador estimado (el real está en Cloudflare) ====== */
+const NEURON_EST = 80; // estimación aproximada por llamada a un modelo pequeño
 function hoyStr(){ return new Date().toISOString().slice(0,10); }
-function neuronas(){ const u = store.get("loesencial_neuronas", {fecha:hoyStr(), n:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.n=0; } return u; }
-function contarIA(llamadas){ const u=neuronas(); u.n += llamadas*NEURON_EST; store.set("loesencial_neuronas", u); pintarNeuronas(); }
-function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = `≈ ${u.n.toLocaleString("es-ES")} neuronas hoy (estimado · tope gratis: 10.000)`; } }
+function neuronas(){ const u = store.get("loesencial_neuronas", {fecha:hoyStr(), n:0, c:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.n=0; u.c=0; } return u; }
+function contarIA(llamadas){ if(!llamadas) return; const u=neuronas(); u.c+=llamadas; u.n+=llamadas*NEURON_EST; store.set("loesencial_neuronas", u); pintarNeuronas(); }
+function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = u.c ? `${u.c} consultas de IA hoy (~${u.n.toLocaleString("es-ES")} neuronas est. · gratis hasta 10.000)` : "Sin uso de IA todavía hoy."; } }
 
 async function fetchExplica(texto, deepEl){
   if(deepEl.dataset.loaded) return;
@@ -551,12 +559,12 @@ async function fetchExplica(texto, deepEl){
     const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420));
     const r = await fetch(u, { headers:{ "Accept":"application/json" } });
     const d = await r.json();
-    contarIA(1);
     const txt = (d.explica||"").trim();
     if(!txt){
-      const motivo = d.error ? ` (${String(d.error).slice(0,80)})` : " — revisa que el binding de IA llamado AI esté añadido al Worker";
+      const motivo = d.error ? ` (${String(d.error).slice(0,90)})` : "";
       throw new Error("vacío"+motivo);
     }
+    contarIA(1);
     deepEl.dataset.loaded = "1";
     deepEl.innerHTML = `<span class="lbl">Más a fondo</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
     deepEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
@@ -584,7 +592,7 @@ async function mejorarSeleccion(items){
         if(t) it.iaTexto = t; else it.iaFail = true;
       }catch(e){ it.iaFail = true; }
     }));
-    contarIA(pend.length);
+    contarIA(pend.filter(it=>it.iaTexto).length);   // solo cuenta las que salieron bien
   }finally{
     mejorando=false;
     if(pend.some(it=>it.iaTexto)) render();
@@ -692,11 +700,10 @@ function stop(){
   if($("#nowTitle").textContent!=="Informativo listo") $("#nowTitle").textContent="Informativo listo";
 }
 function jumpTo(i){
-  if(i<0) return;
+  if(i<0 || !playing) return;          // no arranca solo; solo salta si ya está sonando
   if(!queue.length) construirCola();
   const pos = queue.findIndex(c=>c.seg===i);
   qi = pos<0 ? 0 : pos;
-  playing = true;
   startSpeak();
 }
 
@@ -835,7 +842,12 @@ cargarNoticias();
   const particleFont=fontAt(Math.max(10,12*dpr));
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const WANDER=900, CONVERGE=2100, HOLD=1100;
+  const WANDER=900, CONVERGE=2100, HOLD=750, LIFT=750;
+  const T_HOLD_END=WANDER+CONVERGE+HOLD, T_END=T_HOLD_END+LIFT;
+  // destino: la posición y tamaño del título de la app
+  const mast=document.querySelector(".masthead");
+  let tX=W/2, tY=H*0.12, tFs=fs*0.45;
+  if(mast){ const rc=mast.getBoundingClientRect(); tX=(rc.left+rc.width/2)*dpr; tY=(rc.top+rc.height/2)*dpr; tFs=parseFloat(getComputedStyle(mast).fontSize)*dpr; }
   let raf, T0=performance.now();
 
   function cerrar(){ cancelAnimationFrame(raf); wrap.classList.add("hide"); setTimeout(()=>wrap.remove(),650); }
@@ -844,23 +856,28 @@ cargarNoticias();
   function frame(now){
     const t=now-T0; ctx.clearRect(0,0,W,H);
     ctx.fillStyle=INK; ctx.font=particleFont;
-    let solid=0;
     if(t<WANDER){
       for(const p of P){ p.x+=p.vx; p.y+=p.vy;
         if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1;
         ctx.fillText(p.ch,p.x,p.y); }
-    }else{
+    }else if(t<T_HOLD_END){
       const k=Math.min(1,(t-WANDER)/CONVERGE), e=1-Math.pow(1-k,3);
-      solid=Math.max(0,Math.min(1,(e-0.55)/0.45));
-      // silueta muy tenue debajo, solo para que el ojo lea la palabra
+      const solid=Math.max(0,Math.min(1,(e-0.55)/0.45));
       if(solid>0){ ctx.globalAlpha=solid*0.40; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
-      // las letras, a plena opacidad: la palabra está hecha de ellas
       ctx.font=particleFont;
       for(const p of P){ const kk=Math.max(0,Math.min(1,(e-p.delay)/(1-p.delay)));
         p.x+=(p.tx-p.x)*0.10*(0.35+kk); p.y+=(p.ty-p.y)*0.10*(0.35+kk);
         ctx.fillText(p.ch,p.x,p.y); }
-      if(t>WANDER+CONVERGE+HOLD){ cerrar(); return; }
-    }
+    }else if(t<T_END){
+      // las letras de los bordes se desvanecen y el título sube a su sitio
+      const lk=(t-T_HOLD_END)/LIFT, le=1-Math.pow(1-lk,3);
+      ctx.globalAlpha=1-le; ctx.font=particleFont;
+      for(const p of P) ctx.fillText(p.ch,p.x,p.y);
+      ctx.globalAlpha=0.4+0.6*le;
+      ctx.font=fontAt(fs+(tFs-fs)*le);
+      ctx.fillText(TEXT, W/2+(tX-W/2)*le, H/2+(tY-H/2)*le);
+      ctx.globalAlpha=1;
+    }else{ cerrar(); return; }
     raf=requestAnimationFrame(frame);
   }
   if(reduce){ ctx.fillStyle=INK; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); setTimeout(cerrar,950); }
