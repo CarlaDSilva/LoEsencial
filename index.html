@@ -732,13 +732,28 @@ async function cargarNoticias(){
 let voices=[], voz=null, idx=-1, queue=[], qi=0, playing=false, gen=0;
 
 /* ====== voz neural (IA): decodifica el MP3 de MeloTTS y lo reproduce por Web Audio (funciona en iPad) ====== */
-let actx=null, iaSrc=null, iaBuffers={}, iaSegs=[], iaPos=0;
+let actx=null, iaSrc=null, iaBuffers={}, iaSegs=[], iaPos=0, iaFails=0;
 function usandoIA(){ return !!(cfg.voiceIA && cfg.workerUrl); }
 function ensureCtx(){
   if(!actx){ const AC = window.AudioContext||window.webkitAudioContext; if(AC) actx = new AC(); }
   if(actx && actx.state==="suspended") actx.resume();
 }
-function construirColaIA(){ iaSegs = SEGMENTS.map((s,si)=>({seg:si, text:s.text})); }
+function trocearTTS(txt){
+  const out=[];
+  const frases = (String(txt||"").match(/[^.!?…]+[.!?…]*/g) || [txt]).map(s=>s.trim()).filter(Boolean);
+  for(let f of frases){
+    while(f.length>170){
+      let c=f.lastIndexOf(" ",170); if(c<70) c=170;
+      out.push(f.slice(0,c).trim()); f=f.slice(c).trim();
+    }
+    if(f) out.push(f);
+  }
+  return out.filter(s=>s.length);
+}
+function construirColaIA(){
+  iaSegs = [];
+  SEGMENTS.forEach((s,si)=>{ trocearTTS(s.text).forEach(t=> iaSegs.push({seg:si, text:t})); });
+}
 function pararIA(){ try{ if(iaSrc){ iaSrc.onended=null; iaSrc.stop(); } }catch(e){} iaSrc=null; }
 async function ttsBuffer(text){
   if(iaBuffers[text]) return iaBuffers[text];
@@ -758,6 +773,7 @@ async function playSegIA(myGen){
   try{
     const buf = await ttsBuffer(s.text);
     if(myGen!==gen || !playing) return;
+    iaFails = 0;
     iaSrc = actx.createBufferSource();
     iaSrc.buffer = buf;
     iaSrc.playbackRate.value = cfg.speed||1;
@@ -767,8 +783,10 @@ async function playSegIA(myGen){
     if(iaSegs[iaPos+1]) ttsBuffer(iaSegs[iaPos+1].text).catch(()=>{});   // adelanta el siguiente
   }catch(e){
     if(myGen!==gen) return;
-    $("#nowTitle").textContent = "Voz IA: " + String(e.message||e).slice(0,46);
-    iaPos++; setTimeout(()=>{ if(myGen===gen && playing) playSegIA(myGen); }, 400);
+    iaFails++;
+    const msg = String(e.message||e).slice(0,60);
+    if(iaFails>=2){ playing=false; pararIA(); uiPlaying(false); $("#nowTitle").textContent="Voz IA falló: "+msg; return; }
+    iaPos++; setTimeout(()=>{ if(myGen===gen && playing) playSegIA(myGen); }, 250);
   }
 }
 
@@ -835,7 +853,7 @@ function play(){
     ensureCtx();
     if(!actx){ $("#nowTitle").textContent="Audio no disponible"; return; }
     if(!iaSegs.length || iaPos>=iaSegs.length){ construirColaIA(); iaPos=0; }
-    playing=true; const myGen=++gen; uiPlaying(true); $("#nowTitle").textContent=NOMBRE+" en directo";
+    playing=true; iaFails=0; const myGen=++gen; uiPlaying(true); $("#nowTitle").textContent=NOMBRE+" en directo";
     playSegIA(myGen); return;
   }
   if(!window.speechSynthesis){ $("#nowTitle").textContent="Tu navegador no soporta voz"; return; }
