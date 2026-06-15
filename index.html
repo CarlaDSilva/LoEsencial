@@ -32,7 +32,9 @@
   body{
     font-family:var(--serif); line-height:1.62; color:var(--text);
     background-color:var(--bg);
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='150' height='150' filter='url(%23n)' opacity='0.14'/%3E%3C/svg%3E");
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+    background-size:160px 160px;
+    background-blend-mode:overlay;
     padding:max(env(safe-area-inset-top),18px) 0 120px;
     -webkit-font-smoothing:antialiased;
   }
@@ -87,6 +89,16 @@
   .reloadbtn{font-family:var(--sans); font-size:14px; font-weight:600; color:var(--bg); background:var(--accent); border:none; border-radius:9px; padding:10px 16px; cursor:pointer;}
   .deep{margin-top:11px; padding:12px 14px; border-left:3px solid var(--accent); background:var(--surface); font-size:16px; display:none;}
   .deep.open{display:block;}
+  .caret{margin-left:8px; width:26px; height:26px; flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--muted); cursor:pointer; transition:transform .2s ease;}
+  .seg.collapsed .caret{transform:rotate(-90deg);}
+  .seg.collapsed .body, .seg.collapsed .ctx, .seg.collapsed .src, .seg.collapsed .deep, .seg.collapsed .acts, .seg.collapsed .histbox{display:none;}
+  .acts{margin-top:9px;}
+  .histbtn{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:14px; padding:5px 12px; cursor:pointer;}
+  .histbtn.on{border-color:var(--accent); color:var(--accent);}
+  .histbox{margin-top:10px; padding:12px 14px; border-left:3px solid var(--muted); background:var(--surface2); font-size:16px; display:none;}
+  .histbox.open{display:block;}
+  .histbox .lbl{display:block; font-family:var(--sans); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .srclink.alt{color:var(--muted); font-size:13px;}
   .deep .lbl{display:block; font-family:var(--sans); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); margin-bottom:6px;}
   .hear{display:inline-flex; align-items:center; gap:7px; margin-top:12px; font-family:var(--sans); font-size:12.5px; font-weight:600; color:var(--accent); background:transparent; border:1px solid var(--accent); border-radius:18px; padding:6px 13px; cursor:pointer;}
   .hear svg{display:block;}
@@ -207,6 +219,10 @@
         <div><label>Saltar muros de pago</label><div class="hint">Abre "Leer la noticia" a través de un archivo público. No siempre funciona. Si un medio te aporta, apóyalo.</div></div>
         <div class="sw" data-flag="paywall"></div>
       </div>
+      <div class="row">
+        <div><label>Explicaciones desplegadas</label><div class="hint">Cada "Más a fondo" sale ya abierto y se lee dentro del informativo. Usa más IA.</div></div>
+        <div class="sw" data-flag="explicaAuto"></div>
+      </div>
 
       <h2>Fuente de noticias</h2>
       <div class="vnote">Pega la URL de tu Worker de Cloudflare para recibir noticias reales. Si lo dejas vacío, se muestran ejemplos.</div>
@@ -220,11 +236,19 @@
       <h2>Uso de IA</h2>
       <div class="vnote">Aquí solo cuento las consultas a la IA que hace esta app hoy. El consumo real de neuronas se ve en Cloudflare: menú lateral <b>AI</b> → <b>Workers AI</b> (no aparece en Workers &amp; Pages).</div>
       <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso de IA todavía hoy.</div></div>
+      <div class="row" style="border:none; padding-top:2px;">
+        <a class="srclink" href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai" target="_blank" rel="noopener">Ver mis neuronas en Cloudflare</a>
+      </div>
 
-      <h2>Voz del dispositivo</h2>
+      <h2>Voz</h2>
+      <div class="vnote">La voz neural (IA) suena natural y funciona igual en iPad. Necesita el Worker configurado y consume IA. Si la apagas, se usa la voz del dispositivo.</div>
+      <div class="row">
+        <div><label>Voz neural (IA)</label><div class="hint">Adiós a la voz de robot. Genera el audio con la IA.</div></div>
+        <div class="sw" data-flag="voiceIA"></div>
+      </div>
       <div class="vnote" id="vnote"></div>
       <div class="row" style="border:none;">
-        <div style="flex:1"><label for="voiceSel">Voz del sistema</label></div>
+        <div style="flex:1"><label for="voiceSel">Voz del sistema (si la IA está apagada)</label></div>
         <select class="dur" id="voiceSel" style="max-width:62%"></select>
       </div>
 
@@ -257,6 +281,7 @@ const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="curren
 const ICON_SETTINGS = '<svg viewBox="0 0 24 24" width="23" height="23" fill="currentColor" aria-hidden="true"><path d="M3 7h7.2a3 3 0 0 1 5.6 0H21v2h-5.2a3 3 0 0 1-5.6 0H3V7zm0 8h5.2a3 3 0 0 1 5.6 0H21v2h-7.2a3 3 0 0 1-5.6 0H3v-2z"/></svg>';
 const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
 const ICON_HEAR = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.4 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+const ICON_CARET = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
 /* ====== noticias de EJEMPLO (extra = explicación a fondo del botón "?") ====== */
 const DATA = [
@@ -334,7 +359,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 const cfg = store.get("loesencial_cfg", {
-  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false,
+  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:false, explicaAuto:false,
   tono:"calmado", voiceURI:"", workerUrl:"", intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia"]
 });
 
@@ -470,7 +495,7 @@ function tasaPara(item){
 
 function render(){
   const g = generarGuion();
-  const script = $("#script"); script.innerHTML = ""; SEGMENTS = [];
+  const script = $("#script"); script.innerHTML = ""; SEGMENTS = []; iaSegs = []; iaPos = 0;
 
   const mk = (html, text, rate, opts={}) => {
     const el = document.createElement("div");
@@ -478,6 +503,17 @@ function render(){
     el.innerHTML = html;
     const seg = { el, text, rate };
     el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
+    const caret = el.querySelector(".caret");
+    if(caret) caret.addEventListener("click", ev=>{ ev.stopPropagation(); el.classList.toggle("collapsed"); });
+    const histbtn = el.querySelector(".histbtn"), histbox = el.querySelector(".histbox");
+    if(histbtn && histbox){
+      histbox.addEventListener("click", ev=>ev.stopPropagation());
+      histbtn.addEventListener("click", ev=>{
+        ev.stopPropagation();
+        const o = histbox.classList.toggle("open"); histbtn.classList.toggle("on", o);
+        if(o && !histbox.dataset.loaded && cfg.workerUrl) fetchHistoria(opts.fetchText, histbox);
+      });
+    }
     if(opts.askable){
       const ask=el.querySelector(".ask"), deep=el.querySelector(".deep");
       if(ask && deep){
@@ -487,10 +523,10 @@ function render(){
           const o=deep.classList.toggle("open"); ask.classList.toggle("on",o);
           if(o && !opts.extra && !deep.dataset.loaded && cfg.workerUrl) fetchExplica(opts.fetchText, deep);
         });
-        const hear=el.querySelector(".hear");
-        if(hear && opts.extra) hear.addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(opts.extra); });
       }
     }
+    const hear=el.querySelector(".deep .hear");
+    if(hear && opts.extra) hear.addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(opts.extra); });
     script.appendChild(el);
     SEGMENTS.push(seg);
     return seg;
@@ -504,21 +540,32 @@ function render(){
   g.items.forEach((it,i)=>{
     const conn = i===0 ? "" : conns[(i-1+offC) % conns.length];
     const cuerpo = it.iaTexto || it.texto;
-    const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${cuerpo}${it.ctx? " "+it.ctx : ""}`;
+    const expl = (cfg.explicaAuto && it.iaExplica) ? it.iaExplica : "";
+    const spoken = `${conn? conn+" ":""}${it.cont? it.cont+" ":""}${cuerpo}${it.ctx? " "+it.ctx : ""}${expl? " "+expl : ""}`;
     const askable = !!(it.extra || cfg.workerUrl);
     let html = `<div class="head">
         <span class="dot" style="background:${TONO_COLOR[it.tono]||"var(--neu)"}"></span>
         <span class="marker">${TEMAS[it.tema]||it.tema}</span>
-        ${askable?'<button class="ask" aria-label="Explicar más a fondo">?</button>':''}</div>
+        ${askable?'<button class="ask" aria-label="Explicar más a fondo">?</button>':'<span style="margin-left:auto"></span>'}
+        <button class="caret" aria-label="Colapsar tema">${ICON_CARET}</button></div>
         <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${cuerpo}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
     const fuentesTxt = (it.fuentes&&it.fuentes.length) ? `Contrastado en ${listar(it.fuentes)}.` : "";
-    const destino = (cfg.paywall && it.url) ? ("https://archive.ph/newest/" + it.url) : it.url;
-    const link = it.url ? ` <a class="srclink" href="${destino}" target="_blank" rel="noopener">Leer la noticia</a>` : "";
+    let link = "";
+    if(it.url){
+      const principal = cfg.paywall ? ("https://archive.ph/newest/" + it.url) : it.url;
+      link = ` <a class="srclink" href="${principal}" target="_blank" rel="noopener">Leer la noticia</a>`;
+      if(cfg.paywall) link += ` <a class="srclink alt" href="https://web.archive.org/web/${it.url}" target="_blank" rel="noopener">(otra vía)</a>`;
+    }
     if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
-    if(it.extra) html += `<div class="deep"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    if(it.extra) html += `<div class="deep open"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    else if(expl) html += `<div class="deep open" data-loaded="1"><span class="lbl">Más a fondo</span>${expl}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
     else if(askable) html += `<div class="deep"><span class="lbl">Más a fondo</span><span class="cargando">Pulsa el signo de interrogación para que te lo expliquen.</span></div>`;
-    mk(html, spoken, tasaPara(it), {askable, extra:it.extra, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)});
+    if(cfg.workerUrl){
+      html += `<div class="acts"><button class="histbtn" type="button">Historia</button></div>`;
+      html += `<div class="histbox"><span class="lbl">Historia</span><span class="cargando">Pulsa "Historia" para conocer el trasfondo.</span></div>`;
+    }
+    mk(html, spoken, tasaPara(it), {askable, extra:it.extra||expl, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)});
   });
 
   mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
@@ -605,29 +652,57 @@ async function fetchExplica(texto, deepEl){
   }
 }
 
+async function fetchHistoria(texto, boxEl){
+  if(boxEl.dataset.loaded) return;
+  boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">Buscando el trasfondo…</span>`;
+  try{
+    const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+    const u = cfg.workerUrl + sep + "historia=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
+    const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
+    const txt = (d.historia||"").trim();
+    if(!txt){ const m=d.error?` (${String(d.error).slice(0,90)})`:""; throw new Error("vacío"+m); }
+    contarIA(1);
+    boxEl.dataset.loaded = "1";
+    boxEl.innerHTML = `<span class="lbl">Historia</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
+    boxEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
+  }catch(e){
+    boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacío")?String(e.message).slice(5):""}.</span>`;
+  }
+}
+
 /* ====== IA: reescribir/resumir las noticias seleccionadas (sin clickbait) ====== */
 let mejorando=false;
 async function mejorarSeleccion(items){
   if(!cfg.workerUrl || mejorando) return;
-  const pend = (items||[]).filter(it=>!it.iaTexto && !it.iaFail && it.descBruta!==undefined);
+  const pend = (items||[]).filter(it=> it.descBruta!==undefined &&
+    ((!it.iaTexto && !it.iaFail) || (cfg.explicaAuto && !it.iaExplica && !it.iaExplicaFail)));
   if(!pend.length) return;
   mejorando=true;
+  let cambios=false;
+  const sep = cfg.workerUrl.includes("?") ? "&" : "?";
   try{
     await Promise.all(pend.map(async it=>{
-      try{
-        const sep = cfg.workerUrl.includes("?") ? "&" : "?";
-        const fuente = (it.titulo||"") + ". " + (it.descBruta||"");
-        const u = cfg.workerUrl + sep + "resume=" + encodeURIComponent(fuente.slice(0,500)) + "&tono=" + encodeURIComponent(cfg.tono);
-        const r = await fetch(u, { headers:{ "Accept":"application/json" } });
-        const d = await r.json();
-        const t = (d.texto||"").trim();
-        if(t) it.iaTexto = t; else it.iaFail = true;
-      }catch(e){ it.iaFail = true; }
+      const fuente = (it.titulo||"") + ". " + (it.descBruta||"");
+      if(!it.iaTexto && !it.iaFail){
+        try{
+          const u = cfg.workerUrl + sep + "resume=" + encodeURIComponent(fuente.slice(0,500)) + "&tono=" + encodeURIComponent(cfg.tono);
+          const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
+          const t = (d.texto||"").trim();
+          if(t){ it.iaTexto = t; contarIA(1); cambios=true; } else it.iaFail = true;
+        }catch(e){ it.iaFail = true; }
+      }
+      if(cfg.explicaAuto && !it.iaExplica && !it.iaExplicaFail){
+        try{
+          const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent(fuente.slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
+          const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
+          const t = (d.explica||"").trim();
+          if(t){ it.iaExplica = t; contarIA(1); cambios=true; } else it.iaExplicaFail = true;
+        }catch(e){ it.iaExplicaFail = true; }
+      }
     }));
-    contarIA(pend.filter(it=>it.iaTexto).length);   // solo cuenta las que salieron bien
   }finally{
     mejorando=false;
-    if(pend.some(it=>it.iaTexto)) render();
+    if(cambios) render();
   }
 }
 async function cargarNoticias(){
@@ -655,6 +730,47 @@ async function cargarNoticias(){
 
 /* ====== voz (Web Speech) — con guarda de generación para evitar bucles ====== */
 let voices=[], voz=null, idx=-1, queue=[], qi=0, playing=false, gen=0;
+
+/* ====== voz neural (IA): decodifica el MP3 de MeloTTS y lo reproduce por Web Audio (funciona en iPad) ====== */
+let actx=null, iaSrc=null, iaBuffers={}, iaSegs=[], iaPos=0;
+function usandoIA(){ return !!(cfg.voiceIA && cfg.workerUrl); }
+function ensureCtx(){
+  if(!actx){ const AC = window.AudioContext||window.webkitAudioContext; if(AC) actx = new AC(); }
+  if(actx && actx.state==="suspended") actx.resume();
+}
+function construirColaIA(){ iaSegs = SEGMENTS.map((s,si)=>({seg:si, text:s.text})); }
+function pararIA(){ try{ if(iaSrc){ iaSrc.onended=null; iaSrc.stop(); } }catch(e){} iaSrc=null; }
+async function ttsBuffer(text){
+  if(iaBuffers[text]) return iaBuffers[text];
+  const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+  const d = await (await fetch(cfg.workerUrl + sep + "tts=" + encodeURIComponent(text.slice(0,700)))).json();
+  if(!d.audio) throw new Error(d.error||"sin audio");
+  const bin = atob(d.audio), bytes = new Uint8Array(bin.length);
+  for(let k=0;k<bin.length;k++) bytes[k] = bin.charCodeAt(k);
+  const buf = await actx.decodeAudioData(bytes.buffer);
+  iaBuffers[text] = buf; contarIA(1); return buf;
+}
+async function playSegIA(myGen){
+  if(myGen!==gen || !playing) return;
+  if(iaPos>=iaSegs.length){ stop(); return; }
+  const s = iaSegs[iaPos];
+  if(s.seg!==idx){ idx=s.seg; setLive(idx); }
+  try{
+    const buf = await ttsBuffer(s.text);
+    if(myGen!==gen || !playing) return;
+    iaSrc = actx.createBufferSource();
+    iaSrc.buffer = buf;
+    iaSrc.playbackRate.value = cfg.speed||1;
+    iaSrc.connect(actx.destination);
+    iaSrc.onended = ()=>{ if(myGen!==gen || !playing) return; iaPos++; playSegIA(myGen); };
+    iaSrc.start();
+    if(iaSegs[iaPos+1]) ttsBuffer(iaSegs[iaPos+1].text).catch(()=>{});   // adelanta el siguiente
+  }catch(e){
+    if(myGen!==gen) return;
+    $("#nowTitle").textContent = "Voz IA: " + String(e.message||e).slice(0,46);
+    iaPos++; setTimeout(()=>{ if(myGen===gen && playing) playSegIA(myGen); }, 400);
+  }
+}
 
 function elegirVozPorDefecto(){
   const es = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
@@ -714,6 +830,14 @@ function speakNext(myGen){
 }
 
 function play(){
+  if(usandoIA()){
+    if(playing) return;
+    ensureCtx();
+    if(!actx){ $("#nowTitle").textContent="Audio no disponible"; return; }
+    if(!iaSegs.length || iaPos>=iaSegs.length){ construirColaIA(); iaPos=0; }
+    playing=true; const myGen=++gen; uiPlaying(true); $("#nowTitle").textContent=NOMBRE+" en directo";
+    playSegIA(myGen); return;
+  }
   if(!window.speechSynthesis){ $("#nowTitle").textContent="Tu navegador no soporta voz"; return; }
   if(playing) return;
   if(!queue.length || qi>=queue.length || qi<0){ construirCola(); qi=0; }
@@ -722,17 +846,23 @@ function play(){
 }
 function pause(){
   gen++; playing=false;
+  pararIA();
   if(window.speechSynthesis) speechSynthesis.cancel();
   uiPlaying(false); $("#nowTitle").textContent="En pausa";
 }
 function stop(){
-  gen++; playing=false; qi=0; idx=-1;
+  gen++; playing=false; qi=0; idx=-1; iaPos=0;
+  pararIA();
   if(window.speechSynthesis) speechSynthesis.cancel();
   setLive(-1); uiPlaying(false);
   if($("#nowTitle").textContent!=="Informativo listo") $("#nowTitle").textContent="Informativo listo";
 }
 function jumpTo(i){
   if(i<0 || !playing) return;          // no arranca solo; solo salta si ya está sonando
+  if(usandoIA()){
+    if(!iaSegs.length) construirColaIA();
+    pararIA(); iaPos=i; const myGen=++gen; playSegIA(myGen); return;
+  }
   if(!queue.length) construirCola();
   const pos = queue.findIndex(c=>c.seg===i);
   qi = pos<0 ? 0 : pos;
@@ -866,7 +996,7 @@ cargarNoticias();
     if(e===1) return {x:W-Math.random()*m, y:Math.random()*H};
     if(e===2) return {x:Math.random()*W, y:H-Math.random()*m};
     return {x:Math.random()*m, y:Math.random()*H}; }
-  const P=targets.map(t=>{ const s=borde(); return {
+  const P=targets.map(t=>{ const s={x:Math.random()*W, y:Math.random()*H}; return {
     x:s.x, y:s.y, tx:t.x, ty:t.y,
     vx:(Math.random()-0.5)*2.1*dpr, vy:(Math.random()-0.5)*2.1*dpr,
     ch:chars[(Math.random()*chars.length)|0], delay:Math.random()*0.55 }; });
@@ -874,7 +1004,7 @@ cargarNoticias();
   const particleFont=fontAt(Math.max(10,12*dpr));
   ctx.textAlign="center"; ctx.textBaseline="middle";
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const WANDER=900, CONVERGE=2100, HOLD=750, LIFT=750;
+  const WANDER=900, CONVERGE=2100, HOLD=950, LIFT=1600;
   const T_HOLD_END=WANDER+CONVERGE+HOLD, T_END=T_HOLD_END+LIFT;
   // destino: la posición y tamaño del título de la app
   const mast=document.querySelector(".masthead");
@@ -902,7 +1032,7 @@ cargarNoticias();
         ctx.fillText(p.ch,p.x,p.y); }
     }else if(t<T_END){
       // las letras de los bordes se desvanecen y el título sube a su sitio
-      const lk=(t-T_HOLD_END)/LIFT, le=1-Math.pow(1-lk,3);
+      const lk=(t-T_HOLD_END)/LIFT, le=lk<0.5?4*lk*lk*lk:1-Math.pow(-2*lk+2,3)/2;
       ctx.globalAlpha=1-le; ctx.font=particleFont;
       for(const p of P) ctx.fillText(p.ch,p.x,p.y);
       ctx.globalAlpha=1;
