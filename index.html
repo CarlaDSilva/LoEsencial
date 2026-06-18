@@ -107,6 +107,17 @@
   .seg.live .marker{color:var(--accent);}
   .seg.spoken{opacity:.45;}
 
+  .temagrupo{border-top:1px solid var(--line); padding-top:2px;}
+  .temagrupo:first-child{border-top:none;}
+  .ghead{display:flex; align-items:center; gap:10px; padding:13px 0 9px; cursor:pointer;}
+  .ghead .marker{font-family:var(--sans); font-size:11.5px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--text);}
+  .ghead .gcount{font-family:var(--sans); font-size:11.5px; color:var(--muted);}
+  .ghead .caret{margin-left:auto;}
+  .temagrupo.collapsed .gitems{display:none;}
+  .temagrupo.collapsed .caret{transform:rotate(-90deg);}
+  .gitems > .seg{padding:11px 0; border-top:1px dashed var(--line);}
+  .gitems > .seg:first-child{border-top:none; padding-top:0;}
+
   /* ---------- ajustes ---------- */
   .gear{position:fixed; right:18px; bottom:calc(22px + env(safe-area-inset-bottom)); width:54px; height:54px; border-radius:50%; border:1px solid var(--line); background:var(--surface); color:var(--text); cursor:pointer; z-index:30; display:grid; place-items:center; box-shadow:0 6px 20px rgba(27,23,18,.18);}
   .sheet-bg{position:fixed; inset:0; background:rgba(27,23,18,.45); z-index:40; opacity:0; pointer-events:none; transition:opacity .25s;}
@@ -129,6 +140,11 @@
   .chips{display:flex; flex-wrap:wrap; gap:8px; padding:4px 0 2px;}
   .chip{font-family:var(--sans); font-size:13px; padding:8px 13px; border-radius:18px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer;}
   .chip.on{border-color:var(--accent); color:var(--accent); background:rgba(124,36,54,.10);}
+  .chip .x{margin-left:7px; opacity:.6;}
+  .fgrupo{margin:10px 0 4px;}
+  .fgrupo .gt{font-family:var(--sans); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;}
+  .flabel{display:flex; align-items:center; gap:9px; padding:7px 0; font-family:var(--sans); font-size:14.5px; color:var(--text);}
+  .flabel input{width:18px; height:18px; accent-color:var(--accent); flex:0 0 auto;}
   .seg-ctrl{display:flex; gap:6px; flex-wrap:wrap;}
   .seg-ctrl button{font-family:var(--sans); font-size:13px; padding:8px 12px; border-radius:9px; border:1px solid var(--line); background:transparent; color:var(--muted); cursor:pointer;}
   .seg-ctrl button.on{border-color:var(--accent); color:var(--bg); background:var(--accent);}
@@ -216,7 +232,7 @@
         <div class="sw on" data-flag="velInteligente"></div>
       </div>
       <div class="row">
-        <div><label>Saltar muros de pago</label><div class="hint">Abre "Leer la noticia" a través de un archivo público. No siempre funciona. Si un medio te aporta, apóyalo.</div></div>
+        <div><label>Saltar muros de pago</label><div class="hint">Añade un enlace "Saltar muro" además de "Leer la noticia" y "Vista lector". No siempre funciona. Si un medio te aporta, apóyalo.</div></div>
         <div class="sw" data-flag="paywall"></div>
       </div>
       <div class="row">
@@ -234,11 +250,24 @@
       </div>
       <div class="row" style="border:none;"><div class="data" id="vermeta"></div></div>
 
+      <h2>Medios incluidos</h2>
+      <div class="vnote" id="fuentesNota">Configura tu Worker arriba para elegir qué medios entran en el informativo.</div>
+      <div id="fuentesGrupos"></div>
+
+      <h2>Búsquedas</h2>
+      <div class="vnote">Estos temas no tienen un medio fijo: se buscan al vuelo (Argentina, lo local de O Morrazo, etc.). Añade lo que quieras, incluso un nombre propio.</div>
+      <div id="busquedasChips" class="chips"></div>
+      <div class="row" style="border:none; gap:8px;">
+        <input type="text" id="terminoInput" class="urlinput" placeholder="Escribe algo y búscalo, p. ej. Ana Milán" autocapitalize="sentences">
+        <button id="terminoAdd" class="histbtn" type="button" style="flex:0 0 auto;">Añadir</button>
+      </div>
+      <div id="terminosChips" class="chips"></div>
+
       <h2>Uso de IA</h2>
       <div class="vnote">Aquí solo cuento las consultas a la IA que hace esta app hoy. El consumo real de neuronas se ve en Cloudflare: menú lateral <b>AI</b> → <b>Workers AI</b> (no aparece en Workers &amp; Pages).</div>
       <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso de IA todavía hoy.</div></div>
       <div class="row" style="border:none; padding-top:2px;">
-        <a class="srclink" href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai" target="_blank" rel="noopener">Ver mis neuronas en Cloudflare</a>
+        <a class="srclink" id="linkNeuronas" href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai">Ver mis neuronas en Cloudflare</a>
       </div>
 
       <h2>Voz</h2>
@@ -281,6 +310,12 @@
       <div class="row" style="border:none;">
         <input type="range" id="speed" min="0.85" max="1.2" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
         <span class="data" id="speedVal" style="min-width:48px; text-align:right;">1.00×</span>
+      </div>
+
+      <h2>Tus datos</h2>
+      <div class="vnote">Descarga tus ajustes (fuentes, intereses, tono, voz…) en un archivo JSON.</div>
+      <div class="row" style="border:none;">
+        <button id="exportJSON" class="reloadbtn" type="button">Exportar mis datos (JSON)</button>
       </div>
     </div>
   </div>
@@ -359,7 +394,8 @@ const TEMAS = {
   ciencia:"Ciencia", tecnologia:"Tecnología", informatica:"Informática",
   economia:"Economía", cultura:"Cultura", medioambiente:"Medio ambiente",
   deportes:"Deportes", internacional:"Internacional", españa:"España",
-  galicia:"Galicia", vigo:"Vigo", morrazo:"O Morrazo", bueu:"Bueu"
+  galicia:"Galicia", vigo:"Vigo", morrazo:"O Morrazo", bueu:"Bueu",
+  argentina:"Argentina", mujeres:"Mujeres"
 };
 const HIDE = new Set(["internacional","politica","sucesos"]);
 const TONO_COLOR = { positiva:"var(--pos)", neutra:"var(--neu)", negativa:"var(--neg)" };
@@ -375,8 +411,13 @@ const store = {
 };
 const cfg = store.get("loesencial_cfg", {
   dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:false, explicaAuto:false,
-  tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural", intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia"]
+  tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural",
+  intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres"],
+  fuentesSel: null,           // null = todos los medios; si no, array de ids de FEEDS
+  busquedas: ["argentina","migue-granados","indio-solari","galicia","vigo","morrazo","bueu","medioambiente","mujeres"],
+  terminos: []                // términos de búsqueda libres, p. ej. nombres propios
 });
+let CATALOGO = { fuentes: [], intereses: [] };
 
 /* ====== generación del guion (reglas, sin IA) ====== */
 /* ====== limpieza y clasificación de noticias reales ====== */
@@ -516,14 +557,12 @@ function render(){
   const g = generarGuion();
   const script = $("#script"); script.innerHTML = ""; SEGMENTS = []; iaSegs = []; iaPos = 0;
 
-  const mk = (html, text, rate, opts={}) => {
+  const mk = (html, text, rate, opts={}, container) => {
     const el = document.createElement("div");
     el.className = "seg" + (opts.special?" special":"");
     el.innerHTML = html;
     const seg = { el, text, rate };
     el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
-    const caret = el.querySelector(".caret");
-    if(caret) caret.addEventListener("click", ev=>{ ev.stopPropagation(); el.classList.toggle("collapsed"); });
     const histbtn = el.querySelector(".histbtn"), histbox = el.querySelector(".histbox");
     if(histbtn && histbox){
       histbox.addEventListener("click", ev=>ev.stopPropagation());
@@ -546,7 +585,7 @@ function render(){
     }
     const hear=el.querySelector(".deep .hear");
     if(hear && opts.extra) hear.addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(opts.extra); });
-    script.appendChild(el);
+    (container||script).appendChild(el);
     SEGMENTS.push(seg);
     return seg;
   };
@@ -556,7 +595,21 @@ function render(){
 
   const conns = (cfg.tono==="ironico" ? CONNECTORS_IRONIA : CONNECTORS).slice(1);
   const offC = (Math.random()*conns.length)|0;
+  let grupoActual=null, gitems=null, temaAnt=null;
   g.items.forEach((it,i)=>{
+    if(it.tema!==temaAnt){
+      temaAnt=it.tema;
+      grupoActual = document.createElement("div"); grupoActual.className="temagrupo";
+      const n = g.items.filter(x=>x.tema===it.tema).length;
+      grupoActual.innerHTML = `<div class="ghead">
+          <span class="marker">${TEMAS[it.tema]||it.tema}</span>
+          <span class="gcount">${n} ${n===1?"noticia":"noticias"}</span>
+          <button class="caret" aria-label="Colapsar tema">${ICON_CARET}</button></div>
+          <div class="gitems"></div>`;
+      gitems = grupoActual.querySelector(".gitems");
+      grupoActual.querySelector(".ghead").addEventListener("click", ()=> grupoActual.classList.toggle("collapsed"));
+      script.appendChild(grupoActual);
+    }
     const conn = i===0 ? "" : conns[(i-1+offC) % conns.length];
     const cuerpo = it.iaTexto || it.texto;
     const expl = (cfg.explicaAuto && it.iaExplica) ? it.iaExplica : "";
@@ -564,17 +617,15 @@ function render(){
     const askable = !!(it.extra || cfg.workerUrl);
     let html = `<div class="head">
         <span class="dot" style="background:${TONO_COLOR[it.tono]||"var(--neu)"}"></span>
-        <span class="marker">${TEMAS[it.tema]||it.tema}</span>
-        ${askable?'<button class="ask" aria-label="Explicar más a fondo">?</button>':'<span style="margin-left:auto"></span>'}
-        <button class="caret" aria-label="Colapsar tema">${ICON_CARET}</button></div>
+        ${askable?'<button class="ask" aria-label="Explicar más a fondo">?</button>':''}</div>
         <div class="body">${it.cont?`<i style="color:var(--muted)">${it.cont}</i> `:""}${cuerpo}</div>`;
     if(it.ctx) html += `<div class="ctx">${it.ctx}</div>`;
     const fuentesTxt = (it.fuentes&&it.fuentes.length) ? `Contrastado en ${listar(it.fuentes)}.` : "";
     let link = "";
     if(it.url){
-      const principal = cfg.paywall ? ("https://archive.ph/newest/" + it.url) : it.url;
-      link = ` <a class="srclink" href="${principal}" target="_blank" rel="noopener">Leer la noticia</a>`;
-      if(cfg.paywall) link += ` <a class="srclink alt" href="https://web.archive.org/web/${it.url}" target="_blank" rel="noopener">(otra vía)</a>`;
+      link = ` <a class="srclink" href="${it.url}" target="_blank" rel="noopener">Leer la noticia</a>`;
+      link += ` <a class="srclink alt" href="https://r.jina.ai/${it.url}" target="_blank" rel="noopener">Vista lector</a>`;
+      if(cfg.paywall) link += ` <a class="srclink alt" href="https://archive.ph/newest/${it.url}" target="_blank" rel="noopener">Saltar muro</a>`;
     }
     if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
     if(it.extra) html += `<div class="deep open"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
@@ -584,7 +635,7 @@ function render(){
       html += `<div class="acts"><button class="histbtn" type="button">Historia</button></div>`;
       html += `<div class="histbox"><span class="lbl">Historia</span><span class="cargando">Pulsa "Historia" para conocer el trasfondo.</span></div>`;
     }
-    mk(html, spoken, tasaPara(it), {askable, extra:it.extra||expl, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)});
+    mk(html, spoken, tasaPara(it), {askable, extra:it.extra||expl, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)}, gitems);
   });
 
   mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
@@ -726,11 +777,20 @@ async function mejorarSeleccion(items){
     if(cambios) render();
   }
 }
+function urlNoticias(){
+  if(!cfg.workerUrl) return "";
+  const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+  const p = [];
+  if(cfg.fuentesSel && cfg.fuentesSel.length) p.push("fuentes="+cfg.fuentesSel.join(","));
+  if(cfg.busquedas && cfg.busquedas.length) p.push("intereses="+cfg.busquedas.join(","));
+  if(cfg.terminos && cfg.terminos.length) p.push("terminos="+cfg.terminos.map(encodeURIComponent).join(","));
+  return cfg.workerUrl + (p.length? sep+p.join("&") : "");
+}
 async function cargarNoticias(){
   if(!cfg.workerUrl){ NOTICIAS = DATA.slice(); render(); return; }
   $("#nowTitle").textContent = "Buscando noticias…";
   try{
-    const res = await fetch(cfg.workerUrl, { headers:{ "Accept":"application/json" } });
+    const res = await fetch(urlNoticias(), { headers:{ "Accept":"application/json" } });
     if(!res.ok) throw new Error("HTTP "+res.status);
     const data = await res.json();
     const arr = Array.isArray(data) ? data : (data.items||[]);
@@ -843,7 +903,11 @@ function setLive(i){
     s.el.classList.toggle("live", k===i);
     s.el.classList.toggle("spoken", k>-1 && k<i);
   });
-  if(i>=0 && SEGMENTS[i]) SEGMENTS[i].el.scrollIntoView({behavior:"smooth", block:"center"});
+  if(i>=0 && SEGMENTS[i]){
+    const grp = SEGMENTS[i].el.closest(".temagrupo");
+    if(grp) grp.classList.remove("collapsed");
+    SEGMENTS[i].el.scrollIntoView({behavior:"smooth", block:"center"});
+  }
 }
 
 function construirCola(){
@@ -1007,7 +1071,7 @@ speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"×";
 speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; save(); };
 
 const workerInput=$("#workerUrl"); workerInput.value=cfg.workerUrl||"";
-function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); comprobarVersion(); }
+function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); comprobarVersion(); cargarCatalogo(); }
 workerInput.onchange=aplicarWorker;
 $("#reloadNews").onclick=aplicarWorker;
 
@@ -1028,6 +1092,89 @@ async function comprobarVersion(){
   }catch(e){
     el.textContent = "App v"+APP_VER+" · no respondió el Worker (¿URL correcta?)";
   }
+}
+
+/* ====== catálogo de medios y búsquedas (se piden al Worker, así no hay que tocar la app si añades fuentes) ====== */
+async function cargarCatalogo(){
+  const nota=$("#fuentesNota");
+  if(!cfg.workerUrl){ if(nota) nota.textContent="Configura tu Worker arriba para elegir qué medios entran en el informativo."; renderFuentes(); renderBusquedas(); return; }
+  try{
+    const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+    CATALOGO = await (await fetch(cfg.workerUrl + sep + "catalogo=1", { headers:{ "Accept":"application/json" } })).json();
+    if(nota) nota.textContent = "Desmarca lo que no quieras escuchar.";
+  }catch(e){
+    if(nota) nota.textContent = "No se pudo leer el catálogo del Worker (¿está actualizado?).";
+  }
+  renderFuentes(); renderBusquedas();
+}
+function fuenteActiva(id){ return !cfg.fuentesSel || !cfg.fuentesSel.length || cfg.fuentesSel.includes(id); }
+function toggleFuente(id){
+  const todos = (CATALOGO.fuentes||[]).map(f=>f.id);
+  let sel = (cfg.fuentesSel && cfg.fuentesSel.length) ? cfg.fuentesSel.slice() : todos.slice();
+  const i = sel.indexOf(id);
+  if(i>=0) sel.splice(i,1); else sel.push(id);
+  cfg.fuentesSel = (sel.length===todos.length) ? null : sel;   // todos marcados = sin filtro
+  save(); renderFuentes(); aplicarWorker();
+}
+function renderFuentes(){
+  const cont=$("#fuentesGrupos"); if(!cont) return;
+  cont.innerHTML = "";
+  const grupos = {};
+  (CATALOGO.fuentes||[]).forEach(f=>{ (grupos[f.grupo]=grupos[f.grupo]||[]).push(f); });
+  Object.keys(grupos).forEach(g=>{
+    const div = document.createElement("div"); div.className="fgrupo";
+    div.innerHTML = `<div class="gt">${g}</div>` + grupos[g].map(f=>
+      `<label class="flabel"><input type="checkbox" data-fid="${f.id}" ${fuenteActiva(f.id)?"checked":""}><span>${f.fuente}</span></label>`
+    ).join("");
+    cont.appendChild(div);
+  });
+  cont.querySelectorAll("input[data-fid]").forEach(inp=> inp.onchange = ()=> toggleFuente(inp.dataset.fid));
+}
+function renderBusquedas(){
+  const cont=$("#busquedasChips"); if(!cont) return;
+  cont.innerHTML = (CATALOGO.intereses||[]).map(it=>{
+    const on = cfg.busquedas.includes(it.id);
+    return `<button type="button" class="chip${on?" on":""}" data-bid="${it.id}">${it.label}</button>`;
+  }).join("");
+  cont.querySelectorAll("[data-bid]").forEach(b=> b.onclick = ()=>{
+    const id=b.dataset.bid, i=cfg.busquedas.indexOf(id);
+    if(i>=0) cfg.busquedas.splice(i,1); else cfg.busquedas.push(id);
+    save(); renderBusquedas(); aplicarWorker();
+  });
+  renderTerminos();
+}
+function renderTerminos(){
+  const cont=$("#terminosChips"); if(!cont) return;
+  cont.innerHTML = cfg.terminos.map((t,i)=>
+    `<button type="button" class="chip on" data-ti="${i}">${t}<span class="x">✕</span></button>`
+  ).join("");
+  cont.querySelectorAll("[data-ti]").forEach(b=> b.onclick = ()=>{
+    cfg.terminos.splice(+b.dataset.ti,1); save(); renderTerminos(); aplicarWorker();
+  });
+}
+{
+  const ti=$("#terminoInput"), tb=$("#terminoAdd");
+  function addTermino(){
+    const v=(ti.value||"").trim(); if(!v) return;
+    if(!cfg.terminos.includes(v)) cfg.terminos.push(v);
+    ti.value=""; save(); renderTerminos(); aplicarWorker();
+  }
+  if(tb) tb.onclick=addTermino;
+  if(ti) ti.onkeydown = ev=>{ if(ev.key==="Enter"){ ev.preventDefault(); addTermino(); } };
+}
+cargarCatalogo();
+
+{
+  const btn=$("#exportJSON");
+  if(btn) btn.onclick = ()=>{
+    const datos = { app:"Lo Esencial", version:APP_VER, exportado: new Date().toISOString(), ajustes: cfg, usoIA: neuronas() };
+    const blob = new Blob([JSON.stringify(datos, null, 2)], {type:"application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "lo-esencial-datos-"+hoyStr()+".json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  };
 }
 
 function save(){ store.set("loesencial_cfg", cfg); }
@@ -1052,13 +1199,14 @@ cargarNoticias();
   const TEXT="Lo Esencial", INK="#1B1712";
 
   let fs=Math.min(W*0.155, H*0.4);
+  const CY = H*0.40;   // centro vertical del logo durante la animación: media-alta, no el centro exacto
   function fontAt(px){ return SERIF.replace("FS", px+"px"); }
   // muestrear el texto destino
   const off=document.createElement("canvas"); off.width=W; off.height=H;
   const o=off.getContext("2d");
   o.fillStyle="#000"; o.textAlign="center"; o.textBaseline="middle"; o.font=fontAt(fs);
   while(o.measureText(TEXT).width>W*0.84 && fs>10){ fs*=0.94; o.font=fontAt(fs); }
-  o.fillText(TEXT, W/2, H/2);
+  o.fillText(TEXT, W/2, CY);
   const d=o.getImageData(0,0,W,H).data, pts=[], gap=Math.max(3, Math.round(3*dpr));
   for(let y=0;y<H;y+=gap) for(let x=0;x<W;x+=gap) if(d[(y*W+x)*4+3]>128) pts.push({x,y});
   let targets=pts; const CAP=650;
@@ -1099,7 +1247,7 @@ cargarNoticias();
     }else if(t<T_HOLD_END){
       const k=Math.min(1,(t-WANDER)/CONVERGE), e=1-Math.pow(1-k,3);
       const solid=Math.max(0,Math.min(1,(e-0.55)/0.45));
-      if(solid>0){ ctx.globalAlpha=solid; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); ctx.globalAlpha=1; }
+      if(solid>0){ ctx.globalAlpha=solid; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,CY); ctx.globalAlpha=1; }
       ctx.font=particleFont;
       for(const p of P){ const kk=Math.max(0,Math.min(1,(e-p.delay)/(1-p.delay)));
         p.x+=(p.tx-p.x)*0.10*(0.35+kk); p.y+=(p.ty-p.y)*0.10*(0.35+kk);
@@ -1111,11 +1259,11 @@ cargarNoticias();
       for(const p of P) ctx.fillText(p.ch,p.x,p.y);
       ctx.globalAlpha=1;
       ctx.font=fontAt(fs+(tFs-fs)*le);
-      ctx.fillText(TEXT, W/2+(tX-W/2)*le, H/2+(tY-H/2)*le);
+      ctx.fillText(TEXT, W/2+(tX-W/2)*le, CY+(tY-CY)*le);
     }else{ cerrar(); return; }
     raf=requestAnimationFrame(frame);
   }
-  if(reduce){ ctx.fillStyle=INK; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,H/2); setTimeout(cerrar,950); }
+  if(reduce){ ctx.fillStyle=INK; ctx.font=fontAt(fs); ctx.fillText(TEXT,W/2,CY); setTimeout(cerrar,950); }
   else raf=requestAnimationFrame(frame);
 })();
 </script>
