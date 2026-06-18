@@ -232,6 +232,7 @@
       <div class="row" style="border:none; padding-top:2px;">
         <button id="reloadNews" class="reloadbtn" type="button">Actualizar noticias</button>
       </div>
+      <div class="row" style="border:none;"><div class="data" id="vermeta"></div></div>
 
       <h2>Uso de IA</h2>
       <div class="vnote">Aquí solo cuento las consultas a la IA que hace esta app hoy. El consumo real de neuronas se ve en Cloudflare: menú lateral <b>AI</b> → <b>Workers AI</b> (no aparece en Workers &amp; Pages).</div>
@@ -241,10 +242,23 @@
       </div>
 
       <h2>Voz</h2>
-      <div class="vnote">La voz neural (IA) suena natural y funciona igual en iPad. Necesita el Worker configurado y consume IA. Si la apagas, se usa la voz del dispositivo.</div>
+      <div class="vnote">La voz neural (IA) habla español de verdad y suena igual de bien en el iPad. Usa Azure: gratis hasta medio millón de caracteres al mes (de sobra para tres personas) y, al ser plan F0, no puede cobrarte de más. Si la apagas, se usa la voz del dispositivo.</div>
       <div class="row">
         <div><label>Voz neural (IA)</label><div class="hint">Adiós a la voz de robot. Genera el audio con la IA.</div></div>
         <div class="sw" data-flag="voiceIA"></div>
+      </div>
+      <div class="row" style="border:none;">
+        <div style="flex:1"><label for="vozSel">Voz neural</label><div class="hint">España y Latinoamérica.</div></div>
+        <select class="dur" id="vozSel" style="max-width:58%">
+          <option value="es-ES-ElviraNeural">Elvira (España)</option>
+          <option value="es-ES-AlvaroNeural">Álvaro (España)</option>
+          <option value="es-MX-DaliaNeural">Dalia (México)</option>
+          <option value="es-MX-JorgeNeural">Jorge (México)</option>
+          <option value="es-AR-ElenaNeural">Elena (Argentina)</option>
+          <option value="es-AR-TomasNeural">Tomás (Argentina)</option>
+          <option value="es-CO-SalomeNeural">Salomé (Colombia)</option>
+          <option value="es-US-PalomaNeural">Paloma (Latino)</option>
+        </select>
       </div>
       <div class="vnote" id="vnote"></div>
       <div class="row" style="border:none;">
@@ -275,6 +289,7 @@
 "use strict";
 
 const NOMBRE = "Lo Esencial";
+const APP_VER = "8";   // se ve en Ajustes → Fuente de noticias
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.3"/><rect x="14" y="5" width="4" height="14" rx="1.3"/></svg>';
@@ -360,7 +375,7 @@ const store = {
 };
 const cfg = store.get("loesencial_cfg", {
   dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:false, explicaAuto:false,
-  tono:"calmado", voiceURI:"", workerUrl:"", intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia"]
+  tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural", intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia"]
 });
 
 /* ====== generación del guion (reglas, sin IA) ====== */
@@ -372,7 +387,11 @@ const POS_RE = /(acuerdo|r[eé]cord|avance|mejora|premio|rescate|descubr|[eé]xi
 function clasificar(t){ const s=(t||"").toLowerCase(); if(NEG_RE.test(s)) return "negativa"; if(POS_RE.test(s)) return "positiva"; return "neutra"; }
 function esJunk(t){ return JUNK_RE.test(t||""); }
 function esSensible(t){ return SENSIBLE_RE.test(t||""); }
-function limpiarTitulo(t){ return (t||"").split(/\s[|·]\s/)[0].replace(/\s+/g," ").trim(); }
+function limpiarTitulo(t){
+  let s = (t||"").split(/\s[|·]\s/)[0].replace(/\s+/g," ").trim();
+  s = s.replace(/[\s.]*(…|\.\.\.)+\s*$/,"").trim();   // fuera puntos suspensivos finales
+  return s;
+}
 
 /* ====== variedad de aperturas y cierres ====== */
 function pick(a){ return a[(Math.random()*a.length)|0]; }
@@ -600,7 +619,9 @@ function listar(a){ return a.length<=1 ? (a[0]||"") : a.slice(0,-1).join(", ")+"
 function fechaLarga(){ return new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"}); }
 
 function limpiarResumen(desc){
-  const frases = (desc.match(/[^.!?]+[.!?]/g)||[]).map(s=>s.trim()).filter(s=>!/…$/.test(s) && s.length>15);
+  const d = (desc||"").replace(/\s+/g," ");
+  const frases = (d.match(/[^.!?]+[.!?]/g)||[]).map(s=>s.trim())
+    .filter(s => !/(…|\.\.\.)/.test(s) && s.length>15);   // fuera frases cortadas
   return frases.slice(0,2).join(" ");
 }
 function mapItem(r){
@@ -758,7 +779,7 @@ function pararIA(){ try{ if(iaSrc){ iaSrc.onended=null; iaSrc.stop(); } }catch(e
 async function ttsBuffer(text){
   if(iaBuffers[text]) return iaBuffers[text];
   const sep = cfg.workerUrl.includes("?") ? "&" : "?";
-  const d = await (await fetch(cfg.workerUrl + sep + "tts=" + encodeURIComponent(text.slice(0,700)))).json();
+  const d = await (await fetch(cfg.workerUrl + sep + "tts=" + encodeURIComponent(text.slice(0,380)) + "&voz=" + encodeURIComponent(cfg.vozIA||"es-ES-ElviraNeural"))).json();
   if(!d.audio) throw new Error(d.error||"sin audio");
   const bin = atob(d.audio), bytes = new Uint8Array(bin.length);
   for(let k=0;k<bin.length;k++) bytes[k] = bin.charCodeAt(k);
@@ -784,8 +805,22 @@ async function playSegIA(myGen){
   }catch(e){
     if(myGen!==gen) return;
     iaFails++;
-    const msg = String(e.message||e).slice(0,60);
-    if(iaFails>=2){ playing=false; pararIA(); uiPlaying(false); $("#nowTitle").textContent="Voz IA falló: "+msg; return; }
+    if(iaFails>=2){
+      // la voz IA no está disponible: seguimos con la voz del dispositivo para no cortar el informativo
+      const segActual = s.seg;
+      pararIA();
+      if(window.speechSynthesis){
+        $("#nowTitle").textContent = "Voz IA no disponible — uso la voz del dispositivo";
+        construirCola();
+        const pos = queue.findIndex(c=>c.seg===segActual);
+        qi = pos<0 ? 0 : pos;
+        startSpeak();
+      }else{
+        playing=false; uiPlaying(false);
+        $("#nowTitle").textContent = "Voz IA no disponible: " + String(e.message||e).slice(0,46);
+      }
+      return;
+    }
     iaPos++; setTimeout(()=>{ if(myGen===gen && playing) playSegIA(myGen); }, 250);
   }
 }
@@ -964,6 +999,7 @@ function poblarSelectorVoces(){
     if(voz && v.voiceURI===voz.voiceURI) o.selected=true; sel.appendChild(o); });
 }
 { const sel=$("#voiceSel"); if(sel) sel.onchange=()=>{ cfg.voiceURI=sel.value; voz=voices.find(v=>v.voiceURI===cfg.voiceURI)||voz; save(); }; }
+{ const vs=$("#vozSel"); if(vs){ if(!/^es-/.test(cfg.vozIA||"")){ cfg.vozIA="es-ES-ElviraNeural"; save(); } vs.value=cfg.vozIA; vs.onchange=()=>{ cfg.vozIA=vs.value; iaBuffers={}; iaSegs=[]; iaPos=0; save(); }; } }
 poblarSelectorVoces();
 
 const speed=$("#speed"), speedVal=$("#speedVal");
@@ -971,9 +1007,28 @@ speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"×";
 speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; save(); };
 
 const workerInput=$("#workerUrl"); workerInput.value=cfg.workerUrl||"";
-function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); }
+function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); comprobarVersion(); }
 workerInput.onchange=aplicarWorker;
 $("#reloadNews").onclick=aplicarWorker;
+
+async function comprobarVersion(){
+  const el=$("#vermeta"); if(!el) return;
+  if(!cfg.workerUrl){ el.textContent = "App v"+APP_VER+" · sin Worker (mostrando ejemplos)"; return; }
+  el.textContent = "App v"+APP_VER+" · comprobando Worker…";
+  try{
+    const sep = cfg.workerUrl.includes("?") ? "&" : "?";
+    const d = await (await fetch(cfg.workerUrl + sep + "version=1", { headers:{ "Accept":"application/json" } })).json();
+    if(d && d.version){
+      const voz = d.azure ? "voz Azure lista" : "falta AZURE_KEY/REGION";
+      const ia  = d.ia ? "IA lista" : "falta CF_ACCOUNT_ID/TOKEN";
+      el.textContent = "App v"+APP_VER+" · Worker v"+d.version+" · "+voz+" · "+ia;
+    }else{
+      el.textContent = "App v"+APP_VER+" · Worker ANTIGUO (sin versión): vuelve a desplegar el worker.js";
+    }
+  }catch(e){
+    el.textContent = "App v"+APP_VER+" · no respondió el Worker (¿URL correcta?)";
+  }
+}
 
 function save(){ store.set("loesencial_cfg", cfg); }
 
@@ -981,6 +1036,7 @@ function save(){ store.set("loesencial_cfg", cfg); }
 $("#fecha").textContent = new Date().toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"});
 $("#play").onclick = ()=> playing ? pause() : play();
 pintarNeuronas();
+comprobarVersion();
 render();
 cargarNoticias();
 
