@@ -527,8 +527,8 @@ function generarGuion(){
     sel = ronda1.slice(0,3);
   } else {
     const budget = cfg.dur * 150;            // ~150 palabras habladas por minuto
-    sel = ronda1.slice(); let w = sel.reduce((acc,it) => acc + (it.texto+" "+(it.ctx||"")).split(/\s+/).length, 0);
-    for(const it of resto){
+    sel=[]; let w=0;
+    for(const it of orden){
       sel.push(it);
       w += (it.texto+" "+(it.ctx||"")).split(/\s+/).length;
       if(sel.length >= 20 || w>=budget) break;
