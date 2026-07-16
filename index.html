@@ -934,15 +934,17 @@ async function playSegIA(myGen){
 function elegirVozPorDefecto(){
   const es = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
   const pool = es.length ? es : voices;
-  return pool.find(v=>/enhanced|mejorad|premium|siri|natural|neural|google/i.test(v.name))
+  return pool.find(v=>/monica|paulina|m[oó]nica/i.test(v.name))
+      || pool.find(v=>!v.localService)
       || pool.find(v=>v.lang==="es-ES") || pool[0] || null;
 }
 function cargarVoces(){
   voices = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  if(!voices.length) return;
   voz = (cfg.voiceURI && voices.find(v=>v.voiceURI===cfg.voiceURI)) || elegirVozPorDefecto();
   poblarSelectorVoces();
 }
-if(window.speechSynthesis){ cargarVoces(); speechSynthesis.onvoiceschanged = cargarVoces; }
+if(window.speechSynthesis){ speechSynthesis.addEventListener('voiceschanged', cargarVoces); cargarVoces(); }
 
 function setLive(i){
   SEGMENTS.forEach((s,k)=>{
