@@ -92,7 +92,7 @@
   .caret{margin-left:8px; width:26px; height:26px; flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; border:none; background:transparent; color:var(--muted); cursor:pointer; transition:transform .2s ease;}
   .seg.collapsed .caret{transform:rotate(-90deg);}
   .seg.collapsed .body, .seg.collapsed .ctx, .seg.collapsed .src, .seg.collapsed .deep, .seg.collapsed .acts, .seg.collapsed .histbox{display:none;}
-  .acts{display:flex; gap:8px; margin-top:11px;}
+  .acts{display:flex; flex-wrap:wrap; gap:8px; margin-top:11px;}
   .actbtn{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:14px; padding:6px 14px; cursor:pointer;}
   .actbtn.on{border-color:var(--accent); color:var(--accent);}
   .histbtn{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:14px; padding:5px 12px; cursor:pointer;}
@@ -333,7 +333,7 @@
 "use strict";
 
 const NOMBRE = "Lo Esencial";
-const APP_VER = "10";   // se ve en Ajustes → Fuente de noticias
+const APP_VER = "11";   // se ve en Ajustes → Fuente de noticias
 const ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
@@ -638,7 +638,6 @@ function render(){
     let link = "";
     if(it.url){
       link = ` <a class="srclink" href="${it.url}" target="_blank" rel="noopener noreferrer external">Leer la noticia</a>`;
-      if(ES_IOS) link += ` <a class="srclink alt" href="${it.url}" target="_blank" rel="noopener external" data-lector="1">Vista lector</a>`;
     }
     if(fuentesTxt||link) html += `<div class="src">${fuentesTxt}${link}</div>`;
     // acciones al final, juntas: Contexto (?) e Historia
@@ -701,6 +700,11 @@ function mapItem(r){
   let desc = (r.texto || "");
   if(desc.toLowerCase().startsWith(tituloRaw.toLowerCase().slice(0,20))) desc = desc.slice(tituloRaw.length);
   desc = desc.replace(/^[\s…\.·|–-]+/,"").trim();
+  // Strip RSS artifacts from aggregators
+  desc = desc.replace(/Contrastado en [^.]+[.]/gi,"").trim();
+  desc = desc.replace(/Leer la noticia[^<]*/gi,"").trim();
+  desc = desc.replace(/Vista lector/gi,"").trim();
+  desc = desc.replace(/ {2,}/g," ").trim();
   const resumen = limpiarResumen(desc);
   const textoLimpio = resumen ? `${titulo}. ${resumen}` : `${titulo}.`;
   return {
