@@ -781,7 +781,7 @@ async function mejorarSeleccion(items){
       const fuente = (it.titulo||"") + ". " + (it.descBruta||"");
       if(!it.iaTexto && !it.iaFail){
         try{
-          const u = cfg.workerUrl + sep + "resume=" + encodeURIComponent(fuente.slice(0,500)) + "&tono=" + encodeURIComponent(cfg.tono);
+          const u = cfg.workerUrl + sep + "resume=" + encodeURIComponent(fuente.slice(0,500)) + "&tono=" + encodeURIComponent(cfg.tono) + (it.url ? "&url=" + encodeURIComponent(it.url) : "");
           const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
           const t = limpiarIATexto((d.texto||"").trim());
               if(t){ it.iaTexto = t; contarIA(1); cambios=true; } else it.iaFail = true;
