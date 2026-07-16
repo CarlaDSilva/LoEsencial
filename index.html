@@ -444,8 +444,10 @@ const cfg = store.get("loesencial_cfg", {
   terminos: [],               // términos de búsqueda libres, p. ej. nombres propios
   dev: false                  // modo desarrollador (toca el título de Ajustes 13 veces)
 });
+if (!Array.isArray(cfg.busquedas)) cfg.busquedas = ["argentina","galicia","vigo","morrazo","bueu","medioambiente","mujeres"];
+if (!Array.isArray(cfg.intereses)) cfg.intereses = ["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres"];
+if (!Array.isArray(cfg.terminos)) cfg.terminos = [];
 let CATALOGO = { fuentes: [], intereses: [] };
-if(!cfg.busquedas.includes("deportes")) cfg.busquedas.push("deportes");
 if(!cfg.intereses.includes("deportes")) cfg.intereses.push("deportes");
 
 /* ====== generación del guion (reglas, sin IA) ====== */
