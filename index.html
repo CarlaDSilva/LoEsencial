@@ -326,6 +326,11 @@
         <button id="devOff" class="histbtn" type="button">Ocultar opciones dev</button>
       </div>
       </div>
+
+      <h2>Actualización</h2>
+      <div class="row" style="border:none;">
+        <button id="forceUpdate" class="reloadbtn" type="button">⟳ Cargar última versión</button>
+      </div>
     </div>
   </div>
 
@@ -1060,6 +1065,20 @@ aplicarDev();
   });
   const off=$("#devOff");
   if(off) off.onclick=()=>{ cfg.dev=false; save(); aplicarDev(); };
+}
+
+/* ====== forzar actualización ====== */
+{
+  const btn=$("#forceUpdate");
+  if(btn) btn.onclick=async()=>{
+    if(navigator.serviceWorker){
+      const regs=await navigator.serviceWorker.getRegistrations();
+      for(const r of regs) await r.unregister();
+    }
+    const keys=await caches.keys();
+    for(const k of keys) await caches.delete(k);
+    location.reload(true);
+  };
 }
 
 $("#play").innerHTML=ICON_PLAY; $("#gear").innerHTML=ICON_SETTINGS; $("#sheetClose").innerHTML=ICON_CLOSE;
