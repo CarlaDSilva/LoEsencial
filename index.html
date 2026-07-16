@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <!--
-  LO ESENCIAL â informativo diario por voz (DEMO LOCAL)
-  Â· Un solo archivo. SÃºbelo a GitHub Pages tal cual (index.html).
-  Â· Noticias de EJEMPLO; narrativa por reglas (sin IA). Voz: Web Speech API.
-  Â· El botÃ³n "?" de cada noticia muestra una explicaciÃ³n mÃ¡s a fondo (en la
-    versiÃ³n real esa explicaciÃ³n se generarÃ­a a demanda con IA).
-  Â· Cambiar el nombre: constante NOMBRE.
+  LO ESENCIAL — informativo diario por voz (DEMO LOCAL)
+  · Un solo archivo. Súbelo a GitHub Pages tal cual (index.html).
+  · Noticias de EJEMPLO; narrativa por reglas (sin IA). Voz: Web Speech API.
+  · El botón "?" de cada noticia muestra una explicación más a fondo (en la
+    versión real esa explicación se generaría a demanda con IA).
+  · Cambiar el nombre: constante NOMBRE.
 -->
 <head>
 <meta charset="UTF-8">
@@ -42,7 +42,7 @@
   .data{font-family:var(--sans); font-size:12.5px; color:var(--muted); letter-spacing:.02em;}
   .eyebrow{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);}
 
-  /* ---------- cabecera tipo periÃ³dico ---------- */
+  /* ---------- cabecera tipo periódico ---------- */
   header{text-align:center; margin-bottom:18px;}
   .kicker{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.28em; text-transform:uppercase; color:var(--accent); margin-bottom:5px;}
   .masthead{font-family:var(--serif); font-weight:700; font-size:44px; line-height:1; margin:0 0 9px;}
@@ -64,7 +64,7 @@
   .nowmeta .t1{font-family:var(--sans); font-size:15px; font-weight:600;}
   .nowmeta .t2{margin-top:2px;}
 
-  /* ---------- tono del dÃ­a ---------- */
+  /* ---------- tono del día ---------- */
   .tono{margin:16px 0 6px;}
   .tonobar{display:flex; height:8px; border-radius:2px; overflow:hidden; margin:8px 0 7px; background:var(--surface2);}
   .tonobar span{display:block;}
@@ -175,9 +175,9 @@
 
   <div class="wrap">
     <header>
-      <div class="kicker">EdiciÃ³n diaria</div>
+      <div class="kicker">Edición diaria</div>
       <h1 class="masthead">Lo Esencial</h1>
-      <div class="dateline"><span>Vigo Â· Galicia</span><span id="fecha"></span></div>
+      <div class="dateline"><span>Vigo · Galicia</span><span id="fecha"></span></div>
     </header>
     <p class="sub">Lo que ha pasado hoy, sin el ruido.</p>
 
@@ -193,7 +193,7 @@
     </section>
 
     <div class="tono">
-      <span class="eyebrow">Tono del dÃ­a</span>
+      <span class="eyebrow">Tono del día</span>
       <div class="tonobar" id="tonobar"></div>
       <div class="tonolegend data" id="tonolegend"></div>
     </div>
@@ -209,7 +209,7 @@
       <button class="sheet-close" id="sheetClose" aria-label="Cerrar"></button>
     </div>
     <div class="sheet-body">
-      <h2>DuraciÃ³n</h2>
+      <h2>Duración</h2>
       <div class="row">
         <div><label>Minutos del informativo</label></div>
         <select class="dur" id="dur">
@@ -224,27 +224,27 @@
 
       <h2>Filtros</h2>
       <div class="row">
-        <div><label>No me amargues la maÃ±ana</label><div class="hint">Oculta conflictos, sucesos y polÃ­tica tÃ³xica.</div></div>
+        <div><label>No me amargues la mañana</label><div class="hint">Oculta conflictos, sucesos y política tóxica.</div></div>
         <div class="sw" data-flag="noAmargues"></div>
       </div>
       <div class="row">
-        <div><label>SÃ³lo lo importante</label><div class="hint">Hoy, las 3 cosas que de verdad importan.</div></div>
+        <div><label>Sólo lo importante</label><div class="hint">Hoy, las 3 cosas que de verdad importan.</div></div>
         <div class="sw" data-flag="soloImportante"></div>
       </div>
       <div class="row">
-        <div><label>Velocidad inteligente</label><div class="hint">Lo ligero, rÃ¡pido. Lo complejo, mÃ¡s despacio.</div></div>
+        <div><label>Velocidad inteligente</label><div class="hint">Lo ligero, rápido. Lo complejo, más despacio.</div></div>
         <div class="sw on" data-flag="velInteligente"></div>
       </div>
       <div class="row">
-        <div><label>Explicaciones desplegadas</label><div class="hint">Cada "MÃ¡s a fondo" sale ya abierto y se lee dentro del informativo. Usa mÃ¡s IA.</div></div>
+        <div><label>Explicaciones desplegadas</label><div class="hint">Cada "Más a fondo" sale ya abierto y se lee dentro del informativo. Usa más IA.</div></div>
         <div class="sw" data-flag="explicaAuto"></div>
       </div>
 
       <div class="devonly">
       <h2>Fuente de noticias</h2>
-      <div class="vnote">Pega la URL de tu Worker de Cloudflare para recibir noticias reales. Si lo dejas vacÃ­o, se muestran ejemplos.</div>
+      <div class="vnote">Pega la URL de tu Worker de Cloudflare para recibir noticias reales. Si lo dejas vacío, se muestran ejemplos.</div>
       <div class="row" style="border:none;">
-        <input type="url" id="workerUrl" class="urlinput" placeholder="https://â¦workers.dev" inputmode="url" autocapitalize="off" autocorrect="off">
+        <input type="url" id="workerUrl" class="urlinput" placeholder="https://…workers.dev" inputmode="url" autocapitalize="off" autocorrect="off">
       </div>
       <div class="row" style="border:none; padding-top:2px;">
         <button id="reloadNews" class="reloadbtn" type="button">Actualizar noticias</button>
@@ -253,72 +253,72 @@
       </div>
 
       <h2>Medios incluidos</h2>
-      <div class="vnote" id="fuentesNota">Configura tu Worker arriba para elegir quÃ© medios entran en el informativo.</div>
+      <div class="vnote" id="fuentesNota">Configura tu Worker arriba para elegir qué medios entran en el informativo.</div>
       <div id="fuentesGrupos"></div>
 
-      <h2>BÃºsquedas</h2>
-      <div class="vnote">Estos temas no tienen un medio fijo: se buscan al vuelo (Argentina, lo local de O Morrazo, etc.). AÃ±ade lo que quieras, incluso un nombre propio.</div>
+      <h2>Búsquedas</h2>
+      <div class="vnote">Estos temas no tienen un medio fijo: se buscan al vuelo (Argentina, lo local de O Morrazo, etc.). Añade lo que quieras, incluso un nombre propio.</div>
       <div id="busquedasChips" class="chips"></div>
       <div class="row" style="border:none; gap:8px;">
-        <input type="text" id="terminoInput" class="urlinput" placeholder="Escribe algo y bÃºscalo, p. ej. Ana MilÃ¡n" autocapitalize="sentences">
-        <button id="terminoAdd" class="histbtn" type="button" style="flex:0 0 auto;">AÃ±adir</button>
+        <input type="text" id="terminoInput" class="urlinput" placeholder="Escribe algo y búscalo, p. ej. Ana Milán" autocapitalize="sentences">
+        <button id="terminoAdd" class="histbtn" type="button" style="flex:0 0 auto;">Añadir</button>
       </div>
       <div id="terminosChips" class="chips"></div>
 
       <div class="devonly">
       <h2>Uso de IA</h2>
-      <div class="vnote">AquÃ­ solo cuento las consultas a la IA que hace esta app hoy. El consumo real de neuronas se ve en Cloudflare: menÃº lateral <b>AI</b> â <b>Workers AI</b> (no aparece en Workers &amp; Pages).</div>
-      <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso de IA todavÃ­a hoy.</div></div>
+      <div class="vnote">Aquí solo cuento las consultas a la IA que hace esta app hoy. El consumo real de neuronas se ve en Cloudflare: menú lateral <b>AI</b> → <b>Workers AI</b> (no aparece en Workers &amp; Pages).</div>
+      <div class="row" style="border:none;"><div class="data" id="neuronas">Sin uso de IA todavía hoy.</div></div>
       <div class="row" style="border:none; padding-top:2px;">
         <a class="srclink" id="linkNeuronas" href="https://dash.cloudflare.com/?to=/:account/ai/workers-ai">Ver mis neuronas en Cloudflare</a>
       </div>
 
       <h2>Voz</h2>
-      <div class="vnote">La voz neural (IA) habla espaÃ±ol de verdad y suena igual de bien en el iPad. Usa Azure: gratis hasta medio millÃ³n de caracteres al mes (de sobra para tres personas) y, al ser plan F0, no puede cobrarte de mÃ¡s. Si la apagas, se usa la voz del dispositivo.</div>
+      <div class="vnote">La voz neural (IA) habla español de verdad y suena igual de bien en el iPad. Usa Azure: gratis hasta medio millón de caracteres al mes (de sobra para tres personas) y, al ser plan F0, no puede cobrarte de más. Si la apagas, se usa la voz del dispositivo.</div>
       <div class="row">
-        <div><label>Voz neural (IA)</label><div class="hint">AdiÃ³s a la voz de robot. Genera el audio con la IA.</div></div>
+        <div><label>Voz neural (IA)</label><div class="hint">Adiós a la voz de robot. Genera el audio con la IA.</div></div>
         <div class="sw" data-flag="voiceIA"></div>
       </div>
       <div class="row" style="border:none;">
-        <div style="flex:1"><label for="vozSel">Voz neural</label><div class="hint">EspaÃ±a y LatinoamÃ©rica.</div></div>
+        <div style="flex:1"><label for="vozSel">Voz neural</label><div class="hint">España y Latinoamérica.</div></div>
         <select class="dur" id="vozSel" style="max-width:58%">
-          <option value="es-ES-ElviraNeural">Elvira (EspaÃ±a)</option>
-          <option value="es-ES-AlvaroNeural">Ãlvaro (EspaÃ±a)</option>
-          <option value="es-MX-DaliaNeural">Dalia (MÃ©xico)</option>
-          <option value="es-MX-JorgeNeural">Jorge (MÃ©xico)</option>
+          <option value="es-ES-ElviraNeural">Elvira (España)</option>
+          <option value="es-ES-AlvaroNeural">Álvaro (España)</option>
+          <option value="es-MX-DaliaNeural">Dalia (México)</option>
+          <option value="es-MX-JorgeNeural">Jorge (México)</option>
           <option value="es-AR-ElenaNeural">Elena (Argentina)</option>
-          <option value="es-AR-TomasNeural">TomÃ¡s (Argentina)</option>
-          <option value="es-CO-SalomeNeural">SalomÃ© (Colombia)</option>
+          <option value="es-AR-TomasNeural">Tomás (Argentina)</option>
+          <option value="es-CO-SalomeNeural">Salomé (Colombia)</option>
           <option value="es-US-PalomaNeural">Paloma (Latino)</option>
         </select>
       </div>
       <div class="vnote" id="vnote"></div>
       <div class="row" style="border:none;">
-        <div style="flex:1"><label for="voiceSel">Voz del sistema (si la IA estÃ¡ apagada)</label></div>
+        <div style="flex:1"><label for="voiceSel">Voz del sistema (si la IA está apagada)</label></div>
         <select class="dur" id="voiceSel" style="max-width:62%"></select>
       </div>
       </div>
 
-      <h2>Tono de la locuciÃ³n</h2>
+      <h2>Tono de la locución</h2>
       <div class="row" style="border:none; padding-bottom:4px;">
         <div class="seg-ctrl" id="tono">
           <button data-tono="serio">Serio</button>
           <button data-tono="calmado" class="on">Calmado</button>
-          <button data-tono="analitico">AnalÃ­tico</button>
+          <button data-tono="analitico">Analítico</button>
           <button data-tono="ligero">Ligero</button>
-          <button data-tono="ironico">IrÃ³nico</button>
+          <button data-tono="ironico">Irónico</button>
         </div>
       </div>
 
       <h2>Velocidad de lectura</h2>
       <div class="row" style="border:none;">
         <input type="range" id="speed" min="0.5" max="2.0" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
-        <span class="data" id="speedVal" style="min-width:48px; text-align:right;">1.00Ã</span>
+        <span class="data" id="speedVal" style="min-width:48px; text-align:right;">1.00×</span>
       </div>
 
       <div class="devonly">
       <h2>Tus datos</h2>
-      <div class="vnote">Descarga tus ajustes (fuentes, intereses, tono, vozâ¦) en un archivo JSON.</div>
+      <div class="vnote">Descarga tus ajustes (fuentes, intereses, tono, voz…) en un archivo JSON.</div>
       <div class="row" style="border:none;">
         <button id="exportJSON" class="reloadbtn" type="button">Exportar mis datos (JSON)</button>
       </div>
@@ -333,7 +333,7 @@
 "use strict";
 
 const NOMBRE = "Lo Esencial";
-const APP_VER = "11";   // se ve en Ajustes â Fuente de noticias
+const APP_VER = "11";   // se ve en Ajustes → Fuente de noticias
 const ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
@@ -343,67 +343,67 @@ const ICON_CLOSE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" 
 const ICON_HEAR = '<svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.4 8.6a4 4 0 0 1 0 6.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
 const ICON_CARET = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>';
 
-/* ====== noticias de EJEMPLO (extra = explicaciÃ³n a fondo del botÃ³n "?") ====== */
+/* ====== noticias de EJEMPLO (extra = explicación a fondo del botón "?") ====== */
 const DATA = [
   { id:"sc1", tema:"ciencia", tono:"positiva", peso:"heavy", rel:95,
-    texto:"Un equipo internacional ha logrado mantener estable un material superconductor a temperaturas mucho mÃ¡s altas de lo habitual, un paso que la fÃ­sica llevaba aÃ±os persiguiendo. Si se confirma a gran escala, podrÃ­a cambiar desde el transporte de energÃ­a hasta la computaciÃ³n. De momento, conviene la calma: es un avance sÃ³lido, todavÃ­a no una revoluciÃ³n de bolsillo.",
-    ctx:"La superconductividad permite transmitir electricidad sin pÃ©rdidas, pero hasta ahora exigÃ­a un frÃ­o extremo difÃ­cil de mantener fuera de un laboratorio.",
-    extra:"En un superconductor los electrones se emparejan y circulan sin chocar contra la estructura del material, y por eso no se pierde energÃ­a. El reto no es enfriarlo, que ya sabemos hacerlo, sino conseguirlo cerca de temperatura ambiente y a presiÃ³n normal, y que otros laboratorios reproduzcan el resultado. Por eso la comunidad celebra pero no echa las campanas al vuelo hasta que el experimento se repite de forma independiente.",
+    texto:"Un equipo internacional ha logrado mantener estable un material superconductor a temperaturas mucho más altas de lo habitual, un paso que la física llevaba años persiguiendo. Si se confirma a gran escala, podría cambiar desde el transporte de energía hasta la computación. De momento, conviene la calma: es un avance sólido, todavía no una revolución de bolsillo.",
+    ctx:"La superconductividad permite transmitir electricidad sin pérdidas, pero hasta ahora exigía un frío extremo difícil de mantener fuera de un laboratorio.",
+    extra:"En un superconductor los electrones se emparejan y circulan sin chocar contra la estructura del material, y por eso no se pierde energía. El reto no es enfriarlo, que ya sabemos hacerlo, sino conseguirlo cerca de temperatura ambiente y a presión normal, y que otros laboratorios reproduzcan el resultado. Por eso la comunidad celebra pero no echa las campanas al vuelo hasta que el experimento se repite de forma independiente.",
     fuentes:["Nature","Reuters"] },
   { id:"ec1", tema:"economia", tono:"neutra", peso:"heavy", rel:82,
-    texto:"El banco central mantuvo los tipos de interÃ©s sin cambios, en lÃ­nea con lo esperado. La decisiÃ³n busca ganar tiempo para ver si la inflaciÃ³n sigue cediendo antes de mover ficha.",
-    ctx:"Los tipos de interÃ©s encarecen o abaratan el crÃ©dito: subirlos enfrÃ­a el consumo, bajarlos lo estimula.",
-    extra:"Cuando el banco central toca los tipos, el efecto no se nota al dÃ­a siguiente: tarda meses en llegar a tu hipoteca, a lo que te paga la cuenta de ahorro y al crÃ©dito de las empresas. Mantenerlos quietos equivale, en la prÃ¡ctica, a decir 'esperemos a ver', sin frenar ni acelerar la economÃ­a.",
+    texto:"El banco central mantuvo los tipos de interés sin cambios, en línea con lo esperado. La decisión busca ganar tiempo para ver si la inflación sigue cediendo antes de mover ficha.",
+    ctx:"Los tipos de interés encarecen o abaratan el crédito: subirlos enfría el consumo, bajarlos lo estimula.",
+    extra:"Cuando el banco central toca los tipos, el efecto no se nota al día siguiente: tarda meses en llegar a tu hipoteca, a lo que te paga la cuenta de ahorro y al crédito de las empresas. Mantenerlos quietos equivale, en la práctica, a decir 'esperemos a ver', sin frenar ni acelerar la economía.",
     fuentes:["Bloomberg","Reuters"] },
   { id:"in1", tema:"internacional", tono:"negativa", peso:"heavy", rel:88,
-    texto:"ContinÃºan los choques en la frontera de la regiÃ³n, sin acuerdo a la vista pese a la mediaciÃ³n internacional. Las cifras de personas desplazadas vuelven a subir.",
-    cont:"Esto viene de la escalada que arrancÃ³ hace dos semanas.",
-    extra:"El origen mezcla disputas de territorio y de identidad que se arrastran desde hace generaciones, con varios intentos de acuerdo que no llegaron a cuajar. Las treguas suelen romperse por incidentes locales, y cada repunte de violencia deja mÃ¡s personas desplazadas y mÃ¡s desconfianza de cara a la siguiente negociaciÃ³n.",
+    texto:"Continúan los choques en la frontera de la región, sin acuerdo a la vista pese a la mediación internacional. Las cifras de personas desplazadas vuelven a subir.",
+    cont:"Esto viene de la escalada que arrancó hace dos semanas.",
+    extra:"El origen mezcla disputas de territorio y de identidad que se arrastran desde hace generaciones, con varios intentos de acuerdo que no llegaron a cuajar. Las treguas suelen romperse por incidentes locales, y cada repunte de violencia deja más personas desplazadas y más desconfianza de cara a la siguiente negociación.",
     fuentes:["BBC","Associated Press","Reuters"] },
   { id:"tc1", tema:"tecnologia", tono:"neutra", peso:"light", rel:70,
-    texto:"Una de las grandes tecnolÃ³gicas presentÃ³ la nueva versiÃ³n de su sistema operativo. Trae mejoras de eficiencia y algÃºn cambio de diseÃ±o, sin el terremoto que anunciaban los titulares. En la prÃ¡ctica: irÃ¡ algo mÃ¡s rÃ¡pido y tendrÃ¡s que reubicar un par de botones.",
-    extra:"Las grandes actualizaciones de sistema operativo cambian poco tu dÃ­a a dÃ­a porque la mayorÃ­a son ajustes internos de seguridad y rendimiento. Lo visible âun icono nuevo, un menÃº movidoâ es la punta del iceberg; lo que de verdad importa ocurre por debajo y rara vez se nota hasta que algo deja de fallar.",
+    texto:"Una de las grandes tecnológicas presentó la nueva versión de su sistema operativo. Trae mejoras de eficiencia y algún cambio de diseño, sin el terremoto que anunciaban los titulares. En la práctica: irá algo más rápido y tendrás que reubicar un par de botones.",
+    extra:"Las grandes actualizaciones de sistema operativo cambian poco tu día a día porque la mayoría son ajustes internos de seguridad y rendimiento. Lo visible —un icono nuevo, un menú movido— es la punta del iceberg; lo que de verdad importa ocurre por debajo y rara vez se nota hasta que algo deja de fallar.",
     fuentes:["The Verge","Associated Press"] },
   { id:"ma1", tema:"medioambiente", tono:"positiva", peso:"heavy", rel:67,
-    texto:"Un informe registra el mayor avance anual en energÃ­a renovable instalada hasta la fecha, con la solar a la cabeza. La transiciÃ³n avanza mÃ¡s rÃ¡pido de lo que sugieren las discusiones diarias.",
-    extra:"'Capacidad instalada' es cuÃ¡nta energÃ­a se podrÃ­a generar como mÃ¡ximo, no la que realmente se produce: el sol no brilla de noche ni el viento sopla siempre. Aun asÃ­, batir el rÃ©cord de instalaciÃ³n marca la direcciÃ³n, porque esa capacidad se va aprovechando mejor a medida que avanza el almacenamiento en baterÃ­as.",
+    texto:"Un informe registra el mayor avance anual en energía renovable instalada hasta la fecha, con la solar a la cabeza. La transición avanza más rápido de lo que sugieren las discusiones diarias.",
+    extra:"'Capacidad instalada' es cuánta energía se podría generar como máximo, no la que realmente se produce: el sol no brilla de noche ni el viento sopla siempre. Aun así, batir el récord de instalación marca la dirección, porque esa capacidad se va aprovechando mejor a medida que avanza el almacenamiento en baterías.",
     fuentes:["AIE","The Guardian"] },
   { id:"ga1", tema:"vigo", tono:"neutra", peso:"light", rel:60,
-    texto:"En Vigo, el plan para reorganizar las lÃ­neas de Vitrasa entra en su fase de alegaciones: hay cambios de recorrido en varias zonas y los vecinos tienen un mes para opinar. TraducciÃ³n: revisa tu parada antes de darla por sentada.",
-    extra:"Una fase de alegaciones es el periodo en el que el ayuntamiento publica el plan y la gente puede presentar por escrito objeciones o propuestas antes de que sea definitivo. No es una formalidad vacÃ­a: si suficientes vecinos seÃ±alan un recorrido mal pensado, todavÃ­a puede cambiarse antes de aprobarlo.",
+    texto:"En Vigo, el plan para reorganizar las líneas de Vitrasa entra en su fase de alegaciones: hay cambios de recorrido en varias zonas y los vecinos tienen un mes para opinar. Traducción: revisa tu parada antes de darla por sentada.",
+    extra:"Una fase de alegaciones es el periodo en el que el ayuntamiento publica el plan y la gente puede presentar por escrito objeciones o propuestas antes de que sea definitivo. No es una formalidad vacía: si suficientes vecinos señalan un recorrido mal pensado, todavía puede cambiarse antes de aprobarlo.",
     fuentes:["Faro de Vigo"] },
   { id:"cu1", tema:"cultura", tono:"positiva", peso:"light", rel:58,
-    texto:"Una novela traducida del coreano se ha convertido en el fenÃ³meno editorial del mes, agotando ediciones antes incluso de las reseÃ±as. A veces el boca a boca todavÃ­a le gana la partida a la maquinaria de marketing.",
-    extra:"La narrativa traducida vive un buen momento por una mezcla de factores: comunidades de lectores en redes que recomiendan sin intermediarios, editoriales pequeÃ±as que apuestan por voces de fuera, y premios internacionales que dan visibilidad a idiomas que antes apenas llegaban a las librerÃ­as.",
-    fuentes:["El PaÃ­s"] },
+    texto:"Una novela traducida del coreano se ha convertido en el fenómeno editorial del mes, agotando ediciones antes incluso de las reseñas. A veces el boca a boca todavía le gana la partida a la maquinaria de marketing.",
+    extra:"La narrativa traducida vive un buen momento por una mezcla de factores: comunidades de lectores en redes que recomiendan sin intermediarios, editoriales pequeñas que apuestan por voces de fuera, y premios internacionales que dan visibilidad a idiomas que antes apenas llegaban a las librerías.",
+    fuentes:["El País"] },
   { id:"de1", tema:"deportes", tono:"neutra", peso:"light", rel:48,
-    texto:"Jornada tranquila de liga, con un Ãºnico resultado que mueve la tabla por arriba. Nada que no se pueda resumir en una frase, asÃ­ que ya estÃ¡ resumido.",
-    extra:"Ese Ãºnico resultado reordena la zona alta porque acerca o aleja a los equipos en la pelea por el tÃ­tulo; el resto de la jornada no moviÃ³ nada sustancial, asÃ­ que no hay mucho mÃ¡s que contar sin rellenar por rellenar.",
+    texto:"Jornada tranquila de liga, con un único resultado que mueve la tabla por arriba. Nada que no se pueda resumir en una frase, así que ya está resumido.",
+    extra:"Ese único resultado reordena la zona alta porque acerca o aleja a los equipos en la pelea por el título; el resto de la jornada no movió nada sustancial, así que no hay mucho más que contar sin rellenar por rellenar.",
     fuentes:["Marca"] },
   { id:"if1", tema:"informatica", tono:"neutra", peso:"light", rel:64,
-    texto:"Sale una nueva versiÃ³n de un framework muy usado para crear aplicaciones web, con mejoras de rendimiento y herramientas pensadas tambiÃ©n para quien programa desde dispositivos sin terminal. Para proyectos pequeÃ±os cambia poco; para los grandes, ahorra bastante tiempo de compilaciÃ³n.",
+    texto:"Sale una nueva versión de un framework muy usado para crear aplicaciones web, con mejoras de rendimiento y herramientas pensadas también para quien programa desde dispositivos sin terminal. Para proyectos pequeños cambia poco; para los grandes, ahorra bastante tiempo de compilación.",
     ctx:"Un framework es un conjunto de herramientas y reglas que acelera el desarrollo y evita programar cada pieza desde cero.",
-    extra:"Las versiones nuevas de un framework suelen traer dos cosas a la vez: mejoras internas que no ves pero que hacen la app mÃ¡s rÃ¡pida, y cambios en la forma de escribir el cÃ³digo que pueden obligar a adaptar proyectos antiguos. Por eso conviene leer las notas de la versiÃ³n antes de actualizar algo que ya estÃ¡ en producciÃ³n.",
+    extra:"Las versiones nuevas de un framework suelen traer dos cosas a la vez: mejoras internas que no ves pero que hacen la app más rápida, y cambios en la forma de escribir el código que pueden obligar a adaptar proyectos antiguos. Por eso conviene leer las notas de la versión antes de actualizar algo que ya está en producción.",
     fuentes:["GitHub","MDN"] },
   { id:"mo1", tema:"morrazo", tono:"neutra", peso:"light", rel:55,
-    texto:"En O Morrazo refuerzan en hora punta la lÃ­nea de transporte que conecta las villas de la comarca, tras las quejas por saturaciÃ³n. PequeÃ±o, pero se nota si dependes de ese autobÃºs cada maÃ±ana.",
-    extra:"La comarca de O Morrazo agrupa, entre otras, a Cangas, MoaÃ±a, Bueu y MarÃ­n, muy conectadas entre sÃ­ y con Vigo por mar y carretera. Los ajustes de frecuencias en hora punta son de esas noticias locales que no salen en los grandes titulares pero cambian el dÃ­a a dÃ­a de quien se mueve a diario.",
+    texto:"En O Morrazo refuerzan en hora punta la línea de transporte que conecta las villas de la comarca, tras las quejas por saturación. Pequeño, pero se nota si dependes de ese autobús cada mañana.",
+    extra:"La comarca de O Morrazo agrupa, entre otras, a Cangas, Moaña, Bueu y Marín, muy conectadas entre sí y con Vigo por mar y carretera. Los ajustes de frecuencias en hora punta son de esas noticias locales que no salen en los grandes titulares pero cambian el día a día de quien se mueve a diario.",
     fuentes:["Faro de Vigo","La Voz de Galicia"] },
   { id:"bu1", tema:"bueu", tono:"positiva", peso:"light", rel:50,
     texto:"Bueu prepara la temporada con la vista puesta en sus playas y en la lonja, motor del pueblo. Nada estridente: la rutina de un sitio que funciona.",
-    extra:"La lonja de Bueu es uno de los puntos de venta de pescado fresco de la rÃ­a, y buena parte de la economÃ­a local gira en torno a la pesca y al turismo de costa. Las noticias 'tranquilas' de un pueblo asÃ­ suelen ser, en realidad, seÃ±al de que las cosas marchan.",
+    extra:"La lonja de Bueu es uno de los puntos de venta de pescado fresco de la ría, y buena parte de la economía local gira en torno a la pesca y al turismo de costa. Las noticias 'tranquilas' de un pueblo así suelen ser, en realidad, señal de que las cosas marchan.",
     fuentes:["Faro de Vigo"] },
   { id:"gal1", tema:"galicia", tono:"neutra", peso:"heavy", rel:62,
-    texto:"La Xunta presenta su plan para mejorar la conexiÃ³n ferroviaria de la comunidad, con plazos que, como casi siempre en infraestructuras, conviene tomarse con prudencia. HabrÃ¡ que ver cuÃ¡nto se cumple.",
-    ctx:"Las grandes obras de tren suelen anunciarse con fechas optimistas que despuÃ©s se reajustan varias veces.",
-    extra:"Los planes ferroviarios mezclan competencias del Gobierno central y de la comunidad, financiaciÃ³n europea y obras tÃ©cnicamente complejas, y por eso los plazos iniciales rara vez se cumplen al pie de la letra. No significa que la obra no se haga, sino que el calendario real suele estirarse.",
+    texto:"La Xunta presenta su plan para mejorar la conexión ferroviaria de la comunidad, con plazos que, como casi siempre en infraestructuras, conviene tomarse con prudencia. Habrá que ver cuánto se cumple.",
+    ctx:"Las grandes obras de tren suelen anunciarse con fechas optimistas que después se reajustan varias veces.",
+    extra:"Los planes ferroviarios mezclan competencias del Gobierno central y de la comunidad, financiación europea y obras técnicamente complejas, y por eso los plazos iniciales rara vez se cumplen al pie de la letra. No significa que la obra no se haga, sino que el calendario real suele estirarse.",
     fuentes:["La Voz de Galicia","RTVE"] }
 ];
 
 const TEMAS = {
-  ciencia:"Ciencia", tecnologia:"TecnologÃ­a", informatica:"InformÃ¡tica",
-  economia:"EconomÃ­a", cultura:"Cultura", medioambiente:"Medio ambiente",
-  deportes:"Deportes", internacional:"Internacional", espaÃ±a:"EspaÃ±a",
+  ciencia:"Ciencia", tecnologia:"Tecnología", informatica:"Informática",
+  economia:"Economía", cultura:"Cultura", medioambiente:"Medio ambiente",
+  deportes:"Deportes", internacional:"Internacional", españa:"España",
   galicia:"Galicia", vigo:"Vigo", morrazo:"O Morrazo", bueu:"Bueu",
   argentina:"Argentina", mujeres:"Mujeres"
 };
@@ -412,7 +412,7 @@ const TONO_COLOR = { positiva:"var(--pos)", neutra:"var(--neu)", negativa:"var(-
 const TONO_LABEL = { positiva:"Positiva", neutra:"Neutra", negativa:"Negativa" };
 const DUR_BLOCKS_DEPRECATED = null;
 const CONNECTORS = ["", "Cambiamos de tema.", "En otro orden de cosas.", "Seguimos.", "Mientras tanto.", "Y antes de cerrar,"];
-const CONNECTORS_IRONIA = ["", "CÃ³mo no, otra cosa mÃ¡s.", "Por si te faltaban motivos,", "AtenciÃ³n, que viene una de las buenas.", "Y mientras nadie miraba,", "Para rematar la funciÃ³n,", "Lo de siempre:", "Como era de esperar,", "Y en otro orden de cosas,", "Siguiendo la tÃ³nica,", "Y mientras tanto,", "Pues bien,", "Dicho esto,", "A todo esto,", "Y por si faltaba algo,", "Sin ir mÃ¡s lejos,"];
+const CONNECTORS_IRONIA = ["", "Cómo no, otra cosa más.", "Por si te faltaban motivos,", "Atención, que viene una de las buenas.", "Y mientras nadie miraba,", "Para rematar la función,", "Lo de siempre:", "Como era de esperar,", "Y en otro orden de cosas,", "Siguiendo la tónica,", "Y mientras tanto,", "Pues bien,", "Dicho esto,", "A todo esto,", "Y por si faltaba algo,", "Sin ir más lejos,"];
 
 /* ====== estado ====== */
 const store = {
@@ -422,26 +422,26 @@ const store = {
 const cfg = store.get("loesencial_cfg", {
   dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:false, explicaAuto:false,
   tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural",
-  intereses:["ciencia","tecnologia","informatica","economia","cultura","espaÃ±a","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres"],
+  intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres"],
   fuentesSel: null,           // null = todos los medios; si no, array de ids de FEEDS
   busquedas: ["argentina","galicia","vigo","morrazo","bueu","medioambiente","mujeres"],
-  terminos: [],               // tÃ©rminos de bÃºsqueda libres, p. ej. nombres propios
-  dev: false                  // modo desarrollador (toca el tÃ­tulo de Ajustes 13 veces)
+  terminos: [],               // términos de búsqueda libres, p. ej. nombres propios
+  dev: false                  // modo desarrollador (toca el título de Ajustes 13 veces)
 });
 let CATALOGO = { fuentes: [], intereses: [] };
 
-/* ====== generaciÃ³n del guion (reglas, sin IA) ====== */
-/* ====== limpieza y clasificaciÃ³n de noticias reales ====== */
-const JUNK_RE = /(en directo|en vivo|minuto a minuto|comprobar|euromill|loter[iÃ­]a|sorteo|hor[oÃ³]scopo|quiniela|primitiva|bonoloto|cup[oÃ³]n|resultados del sorteo|c[oÃ³]mo comprar)/i;
-const SENSIBLE_RE = /(violaci|violÃ³|agresi[oÃ³]n sexual|abuso|asesinat|descuartiz|pederast|maltrato|suicid|crimen|apuÃ±al|pornograf)/i;
-const NEG_RE = /(muert|fallec|asesin|viola|agresi|abuso|herid|v[iÃ­]ctima|c[aÃ¡]rcel|prisi[oÃ³]n|condena|senten|fiscal[iÃ­]a|denuncia|dopaje|sanci[oÃ³]n|crisis|guerra|ataqu|conflicto|incendio|accidente|desplaz|recesi[oÃ³]n|despido|temporal|alerta|amenaza|tragedia|detenid|tirote)/i;
-const POS_RE = /(acuerdo|r[eÃ©]cord|avance|mejora|premio|rescate|descubr|[eÃ©]xito|crece|recuperaci|inaugura|hist[oÃ³]rico|logro|soluci[oÃ³]n|campe[oÃ³]n|m[aÃ¡]ximos|estrena)/i;
+/* ====== generación del guion (reglas, sin IA) ====== */
+/* ====== limpieza y clasificación de noticias reales ====== */
+const JUNK_RE = /(en directo|en vivo|minuto a minuto|comprobar|euromill|loter[ií]a|sorteo|hor[oó]scopo|quiniela|primitiva|bonoloto|cup[oó]n|resultados del sorteo|c[oó]mo comprar)/i;
+const SENSIBLE_RE = /(violaci|violó|agresi[oó]n sexual|abuso|asesinat|descuartiz|pederast|maltrato|suicid|crimen|apuñal|pornograf)/i;
+const NEG_RE = /(muert|fallec|asesin|viola|agresi|abuso|herid|v[ií]ctima|c[aá]rcel|prisi[oó]n|condena|senten|fiscal[ií]a|denuncia|dopaje|sanci[oó]n|crisis|guerra|ataqu|conflicto|incendio|accidente|desplaz|recesi[oó]n|despido|temporal|alerta|amenaza|tragedia|detenid|tirote)/i;
+const POS_RE = /(acuerdo|r[eé]cord|avance|mejora|premio|rescate|descubr|[eé]xito|crece|recuperaci|inaugura|hist[oó]rico|logro|soluci[oó]n|campe[oó]n|m[aá]ximos|estrena)/i;
 function clasificar(t){ const s=(t||"").toLowerCase(); if(NEG_RE.test(s)) return "negativa"; if(POS_RE.test(s)) return "positiva"; return "neutra"; }
 function esJunk(t){ return JUNK_RE.test(t||""); }
 function esSensible(t){ return SENSIBLE_RE.test(t||""); }
 function limpiarTitulo(t){
-  let s = (t||"").split(/\s[|Â·]\s/)[0].replace(/\s+/g," ").trim();
-  s = s.replace(/[\s.]*(â¦|\.\.\.)+\s*$/,"").trim();   // fuera puntos suspensivos finales
+  let s = (t||"").split(/\s[|·]\s/)[0].replace(/\s+/g," ").trim();
+  s = s.replace(/[\s.]*(…|\.\.\.)+\s*$/,"").trim();   // fuera puntos suspensivos finales
   return s;
 }
 
@@ -449,62 +449,62 @@ function limpiarTitulo(t){
 function pick(a){ return a[(Math.random()*a.length)|0]; }
 const FIRMAS = {
   serio:[
-    `{F}. Esto es ${NOMBRE}. Estas son las noticias principales del dÃ­a.`,
-    `Buenos dÃ­as. {F}. Comienza ${NOMBRE} con la informaciÃ³n mÃ¡s relevante de la jornada.`,
+    `{F}. Esto es ${NOMBRE}. Estas son las noticias principales del día.`,
+    `Buenos días. {F}. Comienza ${NOMBRE} con la información más relevante de la jornada.`,
     `{F}. Bienvenida a ${NOMBRE}. Le ponemos al corriente de la actualidad.`
   ],
   calmado:[
-    `Buenos dÃ­as. {F}. Esto es ${NOMBRE}: lo que ha pasado hoy, con calma y sin el ruido de costumbre.`,
-    `Hola, muy buenas. Hoy es {F}. AquÃ­ ${NOMBRE}, las noticias que importan, sin prisa.`,
-    `{F}. Respira. Esto es ${NOMBRE}: el dÃ­a, contado con tranquilidad.`
+    `Buenos días. {F}. Esto es ${NOMBRE}: lo que ha pasado hoy, con calma y sin el ruido de costumbre.`,
+    `Hola, muy buenas. Hoy es {F}. Aquí ${NOMBRE}, las noticias que importan, sin prisa.`,
+    `{F}. Respira. Esto es ${NOMBRE}: el día, contado con tranquilidad.`
   ],
   analitico:[
-    `{F}. Esto es ${NOMBRE}. Hoy no solo te cuento quÃ© ha pasado, sino por quÃ© importa.`,
-    `Buenos dÃ­as. {F}. Arranca ${NOMBRE}: las claves del dÃ­a y lo que hay detrÃ¡s.`,
-    `{F}. AquÃ­ ${NOMBRE}, desgranando la actualidad pieza a pieza.`
+    `{F}. Esto es ${NOMBRE}. Hoy no solo te cuento qué ha pasado, sino por qué importa.`,
+    `Buenos días. {F}. Arranca ${NOMBRE}: las claves del día y lo que hay detrás.`,
+    `{F}. Aquí ${NOMBRE}, desgranando la actualidad pieza a pieza.`
   ],
   ligero:[
-    `Â¡Buenas! {F}. Esto es ${NOMBRE}: el dÃ­a en versiÃ³n fÃ¡cil de digerir.`,
-    `Hola hola. {F}. AquÃ­ ${NOMBRE}, las noticias sin que se te haga bola.`,
+    `¡Buenas! {F}. Esto es ${NOMBRE}: el día en versión fácil de digerir.`,
+    `Hola hola. {F}. Aquí ${NOMBRE}, las noticias sin que se te haga bola.`,
     `{F}. Arrancamos ${NOMBRE} con buen rollo y lo esencial.`
   ],
   ironico:[
-    `Buenos dÃ­as, si es que lo son. {F}. Esto es ${NOMBRE}: las noticias de hoy, con el ruido retirado y algo de mala leche.`,
-    `Otra vuelta al sol. {F}. ${NOMBRE} al habla, con lo que pasÃ³ y un par de cejas levantadas.`,
-    `Buenas. {F}. AquÃ­ ${NOMBRE}: la actualidad, servida con una sonrisa de medio lado.`,
-    `{F}. ${NOMBRE}, tu dosis diaria de realidad con guarniciÃ³n de ironÃ­a.`
-  ,`{F}. Hoy tambiÃ©n hubo noticias. ${NOMBRE} las cuenta, sin anestesia.`,
-`${NOMBRE}. {F}. Sin artificios: lo que pasÃ³ y algo de ironÃ­a.`
+    `Buenos días, si es que lo son. {F}. Esto es ${NOMBRE}: las noticias de hoy, con el ruido retirado y algo de mala leche.`,
+    `Otra vuelta al sol. {F}. ${NOMBRE} al habla, con lo que pasó y un par de cejas levantadas.`,
+    `Buenas. {F}. Aquí ${NOMBRE}: la actualidad, servida con una sonrisa de medio lado.`,
+    `{F}. ${NOMBRE}, tu dosis diaria de realidad con guarnición de ironía.`
+  ,`{F}. Hoy también hubo noticias. ${NOMBRE} las cuenta, sin anestesia.`,
+`${NOMBRE}. {F}. Sin artificios: lo que pasó y algo de ironía.`
 ]};
 const CIERRES = {
   serio:[
-    "Esto ha sido todo. Buenos dÃ­as.",
-    "Hasta aquÃ­ la informaciÃ³n del dÃ­a. Gracias por su atenciÃ³n.",
-    "Cerramos el informativo. Que tenga un buen dÃ­a."
+    "Esto ha sido todo. Buenos días.",
+    "Hasta aquí la información del día. Gracias por su atención.",
+    "Cerramos el informativo. Que tenga un buen día."
   ],
   calmado:[
-    "Y hasta aquÃ­, sin agobios. MaÃ±ana habrÃ¡ mÃ¡s. CuÃ­date.",
-    "Eso es todo por hoy. TÃ³matelo con calma y nos escuchamos maÃ±ana.",
-    "Fin del repaso. Ya estÃ¡s al dÃ­a; lo demÃ¡s puede esperar. Buen dÃ­a."
+    "Y hasta aquí, sin agobios. Mañana habrá más. Cuídate.",
+    "Eso es todo por hoy. Tómatelo con calma y nos escuchamos mañana.",
+    "Fin del repaso. Ya estás al día; lo demás puede esperar. Buen día."
   ],
   analitico:[
-    "Hasta aquÃ­ las claves de hoy. MaÃ±ana veremos cÃ³mo evoluciona. Buen dÃ­a.",
-    "Eso es lo importante y su porquÃ©. Nos escuchamos maÃ±ana.",
-    "Cerramos. Con esto tienes el mapa del dÃ­a. Hasta maÃ±ana."
+    "Hasta aquí las claves de hoy. Mañana veremos cómo evoluciona. Buen día.",
+    "Eso es lo importante y su porqué. Nos escuchamos mañana.",
+    "Cerramos. Con esto tienes el mapa del día. Hasta mañana."
   ],
   ligero:[
-    "Â¡Y ya estÃ¡! Sin dramas. MaÃ±ana mÃ¡s. Â¡Que vaya bien!",
-    "Eso es todo, fÃ¡cil y rÃ¡pido. Nos vemos maÃ±ana.",
-    "Fin. Ya puedes presumir de estar informada. Â¡Hasta maÃ±ana!"
+    "¡Y ya está! Sin dramas. Mañana más. ¡Que vaya bien!",
+    "Eso es todo, fácil y rápido. Nos vemos mañana.",
+    "Fin. Ya puedes presumir de estar informada. ¡Hasta mañana!"
   ],
   ironico:[
-    "Y eso es todo. El mundo girarÃ¡ igual lo escuches o no, pero ahora estÃ¡s informada. Hasta maÃ±ana.",
-    "Hasta aquÃ­. Si maÃ±ana el mundo sigue en pie, te lo cuento. Descansa.",
-    "Cerramos. Ya tienes municiÃ³n para las conversaciones de hoy. AdiÃ³s.",
-    "Fin. La realidad seguirÃ¡ ahÃ­ maÃ±ana, puntual y sin avisar. Hasta entonces."
+    "Y eso es todo. El mundo girará igual lo escuches o no, pero ahora estás informada. Hasta mañana.",
+    "Hasta aquí. Si mañana el mundo sigue en pie, te lo cuento. Descansa.",
+    "Cerramos. Ya tienes munición para las conversaciones de hoy. Adiós.",
+    "Fin. La realidad seguirá ahí mañana, puntual y sin avisar. Hasta entonces."
   ,
-"Esto fue todo. El universo sigue expandiÃ©ndose, tÃº ya estÃ¡s al dÃ­a.",
-"Eso es todo lo que importaba hoy. Lo demÃ¡s es ruido. Buenas noches."
+"Esto fue todo. El universo sigue expandiéndose, tú ya estás al día.",
+"Eso es todo lo que importaba hoy. Lo demás es ruido. Buenas noches."
 ]
 };
 
@@ -513,7 +513,7 @@ function generarGuion(){
   let items = NOTICIAS.filter(n => cfg.intereses.includes(n.tema));
   if(cfg.noAmargues) items = items.filter(n => n.tono!=="negativa" && !esSensible((n.titulo||"")+" "+(n.texto||"")));
   items.sort((a,b)=>b.rel-a.rel);
-  // selecciÃ³n con variedad: primero la mejor de cada tema, luego rellena por relevancia
+  // selección con variedad: primero la mejor de cada tema, luego rellena por relevancia
   const porTema = {};
   items.forEach(it=>{ (porTema[it.tema] = porTema[it.tema]||[]).push(it); });
   const ronda1 = Object.values(porTema).map(arr=>arr.shift()).sort((a,b)=>b.rel-a.rel);
@@ -534,7 +534,7 @@ function generarGuion(){
   }
   items = sel;
 
-  // agrupar por tema: todas las de EspaÃ±a juntas, luego tecnologÃ­a, etc.
+  // agrupar por tema: todas las de España juntas, luego tecnología, etc.
   const ordenTema = Object.keys(TEMAS);
   items.sort((a,b)=>{
     const d = ordenTema.indexOf(a.tema) - ordenTema.indexOf(b.tema);
@@ -548,7 +548,7 @@ function generarGuion(){
 
   const firma = pick(FIRMAS[key]).replace("{F}", cap(fechaLarga()));
   const dominante = Object.keys(cuenta).sort((a,b)=>cuenta[b]-cuenta[a])[0] || "neutra";
-  let resumen = `El balance del dÃ­a es mayormente ${TONO_LABEL[dominante].toLowerCase()}: ${cuenta.positiva} positivas, ${cuenta.neutra} neutras y ${cuenta.negativa} negativas.`;
+  let resumen = `El balance del día es mayormente ${TONO_LABEL[dominante].toLowerCase()}: ${cuenta.positiva} positivas, ${cuenta.neutra} neutras y ${cuenta.negativa} negativas.`;
   const cierre = pick(CIERRES[key]);
 
   return { firma, items, resumen, cierre, cuenta };
@@ -578,7 +578,6 @@ function render(){
     el.innerHTML = html;
     const seg = { el, text, rate };
     el.addEventListener("click", ()=>jumpTo(SEGMENTS.indexOf(seg)));
-    // histbox click-stop (now opened automatically with Contexto)
     const histbox2 = el.querySelector(".histbox");
     if(histbox2) histbox2.addEventListener("click", ev=>ev.stopPropagation());
     if(opts.askable){
@@ -642,9 +641,9 @@ function render(){
       html += `<button class="actbtn ask" type="button">Contexto</button>`;
       html += `</div>`;
     }
-    if(it.extra) html += `<div class="deep open"><span class="lbl">MÃ¡s a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
-    else if(expl) html += `<div class="deep open" data-loaded="1"><span class="lbl">MÃ¡s a fondo</span>${expl}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
-    else if(askable) html += `<div class="deep"><span class="lbl">MÃ¡s a fondo</span><span class="cargando">Pulsa "Contexto" y te lo explican en breve.</span></div>`;
+    if(it.extra) html += `<div class="deep open"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    else if(expl) html += `<div class="deep open" data-loaded="1"><span class="lbl">Más a fondo</span>${expl}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    else if(askable) html += `<div class="deep"><span class="lbl">Más a fondo</span><span class="cargando">Pulsa "Contexto" y te lo explican en breve.</span></div>`;
     if(cfg.workerUrl){
       html += `<div class="histbox"><span class="lbl">Historia</span><span class="cargando">Cargando trasfondo histórico…</span></div>`;
     }
@@ -658,7 +657,7 @@ function render(){
 
   const palabras = SEGMENTS.reduce((a,s)=>a+s.text.split(/\s+/).length,0);
   const mins = Math.max(1, Math.round(palabras/150));
-  $("#nowMeta").textContent = `${g.items.length} ${g.items.length===1?"bloque":"bloques"} Â· â ${mins} min`;
+  $("#nowMeta").textContent = `${g.items.length} ${g.items.length===1?"bloque":"bloques"} · ≈ ${mins} min`;
   $("#nowTitle").textContent = "Informativo listo";
 
   stop();
@@ -685,7 +684,7 @@ function fechaLarga(){ return new Date().toLocaleDateString("es-ES",{weekday:"lo
 function limpiarResumen(desc){
   const d = (desc||"").replace(/\s+/g," ");
   const frases = (d.match(/[^.!?]+[.!?]/g)||[]).map(s=>s.trim())
-    .filter(s => !/(â¦|\.\.\.)/.test(s) && s.length>15);   // fuera frases cortadas
+    .filter(s => !/(…|\.\.\.)/.test(s) && s.length>15);   // fuera frases cortadas
   return frases.slice(0,2).join(" ");
 }
 function mapItem(r){
@@ -694,7 +693,7 @@ function mapItem(r){
   if(!titulo || esJunk(titulo)) return null;             // fuera sorteos, directos, etc.
   let desc = (r.texto || "");
   if(desc.toLowerCase().startsWith(tituloRaw.toLowerCase().slice(0,20))) desc = desc.slice(tituloRaw.length);
-  desc = desc.replace(/^[\sâ¦\.Â·|â-]+/,"").trim();
+  desc = desc.replace(/^[\s…\.·|–-]+/,"").trim();
   // Strip RSS artifacts from aggregators
   desc = desc.replace(/Contrastado en [^.]+[.]/gi,"").trim();
   desc = desc.replace(/Leer la noticia[^<]*/gi,"").trim();
@@ -715,15 +714,15 @@ function mapItem(r){
   };
 }
 function limpiarIATexto(t){ if(!t) return t; const PR=[/^(lo cierto (no |)es que[^,]*,?\s*)/i,/^(en realidad[^,]*,?\s*)/i,/^(la realidad es que[^,]*,?\s*)/i,/^(lo cierto no es eso[^,]*,?\s*)/i,/^(sin embargo[^,]*,?\s*)/i]; let s=t.trim(); for(const re of PR){ s=s.replace(re,""); } return s.charAt(0).toUpperCase()+s.slice(1); }
-/* ====== uso de IA: contador estimado (el real estÃ¡ en Cloudflare) ====== */
+/* ====== uso de IA: contador estimado (el real está en Cloudflare) ====== */
 function hoyStr(){ return new Date().toISOString().slice(0,10); }
 function neuronas(){ const u = store.get("loesencial_ia_v2", {fecha:hoyStr(), c:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.c=0; } return u; }
 function contarIA(llamadas){ if(!llamadas) return; const u=neuronas(); u.c=(u.c||0)+llamadas; store.set("loesencial_ia_v2", u); pintarNeuronas(); }
-function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = u.c ? `${u.c} ${u.c===1?"consulta":"consultas"} de IA hoy desde esta app.` : "Sin uso de IA todavÃ­a hoy."; } }
+function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){ const u=neuronas(); el.textContent = u.c ? `${u.c} ${u.c===1?"consulta":"consultas"} de IA hoy desde esta app.` : "Sin uso de IA todavía hoy."; } }
 
 async function fetchExplica(texto, deepEl){
   if(deepEl.dataset.loaded) return;
-  deepEl.innerHTML = `<span class="lbl">MÃ¡s a fondo</span><span class="cargando">Pensandoâ¦</span>`;
+  deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">Pensando…</span>`;
   try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
     const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
@@ -732,32 +731,32 @@ async function fetchExplica(texto, deepEl){
     const txt = (d.explica||"").trim();
     if(!txt){
       const motivo = d.error ? ` (${String(d.error).slice(0,90)})` : "";
-      throw new Error("vacÃ­o"+motivo);
+      throw new Error("vacío"+motivo);
     }
     contarIA(1);
     deepEl.dataset.loaded = "1";
-    deepEl.innerHTML = `<span class="lbl">MÃ¡s a fondo</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
+    deepEl.innerHTML = `<span class="lbl">Más a fondo</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
     deepEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
   }catch(e){
-    deepEl.innerHTML = `<span class="lbl">MÃ¡s a fondo</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacÃ­o")?String(e.message).slice(5):""}.</span>`;
+    deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacío")?String(e.message).slice(5):""}.</span>`;
   }
 }
 
 async function fetchHistoria(texto, boxEl){
   if(boxEl.dataset.loaded) return;
-  boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">Buscando el trasfondoâ¦</span>`;
+  boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">Buscando el trasfondo…</span>`;
   try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
     const u = cfg.workerUrl + sep + "historia=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
     const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
     const txt = (d.historia||"").trim();
-    if(!txt){ const m=d.error?` (${String(d.error).slice(0,90)})`:""; throw new Error("vacÃ­o"+m); }
+    if(!txt){ const m=d.error?` (${String(d.error).slice(0,90)})`:""; throw new Error("vacío"+m); }
     contarIA(1);
     boxEl.dataset.loaded = "1";
     boxEl.innerHTML = `<span class="lbl">Historia</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
     boxEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
   }catch(e){
-    boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacÃ­o")?String(e.message).slice(5):""}.</span>`;
+    boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacío")?String(e.message).slice(5):""}.</span>`;
   }
 }
 
@@ -807,7 +806,7 @@ function urlNoticias(){
 }
 async function cargarNoticias(){
   if(!cfg.workerUrl){ NOTICIAS = DATA.slice(); render(); return; }
-  $("#nowTitle").textContent = "Buscando noticiasâ¦";
+  $("#nowTitle").textContent = "Buscando noticias…";
   try{
     const res = await fetch(urlNoticias(), { headers:{ "Accept":"application/json" } });
     if(!res.ok) throw new Error("HTTP "+res.status);
@@ -824,11 +823,11 @@ async function cargarNoticias(){
     render();
   }catch(e){
     NOTICIAS = DATA.slice(); render();
-    $("#nowTitle").textContent = "No se pudo cargar â mostrando ejemplos";
+    $("#nowTitle").textContent = "No se pudo cargar — mostrando ejemplos";
   }
 }
 
-/* ====== voz (Web Speech) â con guarda de generaciÃ³n para evitar bucles ====== */
+/* ====== voz (Web Speech) — con guarda de generación para evitar bucles ====== */
 let voices=[], voz=null, idx=-1, queue=[], qi=0, playing=false, gen=0;
 
 /* ====== voz neural (IA): audio MP3 reproducido con <audio> para conservar el tono al cambiar velocidad ====== */
@@ -840,7 +839,7 @@ function ensureAudio(){
     iaAudio.preload = "auto";
     iaAudio.setAttribute("playsinline","");
   }
-  // intento de "desbloqueo" para que suene aunque el interruptor fÃ­sico estÃ© en silencio: una reproducciÃ³n dentro del gesto
+  // intento de "desbloqueo" para que suene aunque el interruptor físico esté en silencio: una reproducción dentro del gesto
   try{ iaAudio.muted=false; const p=iaAudio.play(); if(p&&p.catch) p.catch(()=>{}); iaAudio.pause(); }catch(e){}
 }
 function aplicarVel(){
@@ -850,7 +849,7 @@ function aplicarVel(){
 }
 function trocearTTS(txt){
   const out=[];
-  const frases = (String(txt||"").match(/[^.!?â¦]+[.!?â¦]*/g) || [txt]).map(s=>s.trim()).filter(Boolean);
+  const frases = (String(txt||"").match(/[^.!?…]+[.!?…]*/g) || [txt]).map(s=>s.trim()).filter(Boolean);
   for(let f of frases){
     while(f.length>170){
       let c=f.lastIndexOf(" ",170); if(c<70) c=170;
@@ -893,11 +892,11 @@ async function playSegIA(myGen){
     if(myGen!==gen) return;
     iaFails++;
     if(iaFails>=2){
-      // la voz IA no estÃ¡ disponible: seguimos con la voz del dispositivo para no cortar el informativo
+      // la voz IA no está disponible: seguimos con la voz del dispositivo para no cortar el informativo
       const segActual = s.seg;
       pararIA();
       if(window.speechSynthesis){
-        $("#nowTitle").textContent = "Voz IA no disponible â uso la voz del dispositivo";
+        $("#nowTitle").textContent = "Voz IA no disponible — uso la voz del dispositivo";
         construirCola();
         const pos = queue.findIndex(c=>c.seg===segActual);
         qi = pos<0 ? 0 : pos;
@@ -1002,7 +1001,7 @@ function stop(){
   if($("#nowTitle").textContent!=="Informativo listo") $("#nowTitle").textContent="Informativo listo";
 }
 function jumpTo(i){
-  if(i<0 || !playing) return;          // no arranca solo; solo salta si ya estÃ¡ sonando
+  if(i<0 || !playing) return;          // no arranca solo; solo salta si ya está sonando
   if(usandoIA()){
     if(!iaSegs.length) construirColaIA();
     pararIA(); iaPos=iaSegs.findIndex(s=>s.seg===i); if(iaPos<0) iaPos=0; const myGen=++gen; playSegIA(myGen); return;
@@ -1013,18 +1012,18 @@ function jumpTo(i){
   startSpeak();
 }
 
-/* leer en voz alta la explicaciÃ³n del botÃ³n "?" (aparte del informativo) */
+/* leer en voz alta la explicación del botón "?" (aparte del informativo) */
 function speakAside(text){
   if(!window.speechSynthesis || !text) return;
   if(playing) pause();
   const myGen = ++gen;
   speechSynthesis.cancel();
-  $("#nowTitle").textContent = "Explicando a fondoâ¦";
+  $("#nowTitle").textContent = "Explicando a fondo…";
   const frases = text.match(/[^.!?]+[.!?]*/g) || [text];
   let j=0;
   (function next(){
     if(myGen!==gen) return;
-    if(j>=frases.length){ if($("#nowTitle").textContent==="Explicando a fondoâ¦") $("#nowTitle").textContent="Informativo listo"; return; }
+    if(j>=frases.length){ if($("#nowTitle").textContent==="Explicando a fondo…") $("#nowTitle").textContent="Informativo listo"; return; }
     const u=new SpeechSynthesisUtterance(frases[j].trim());
     if(voz){ u.voice=voz; u.lang=voz.lang||"es-ES"; } else u.lang="es-ES";
     u.rate=clampRate(0.96*(cfg.speed||1)); u.pitch=pitchFor();
@@ -1043,7 +1042,7 @@ function openSheet(){ sheet.classList.add("open"); bg.classList.add("open"); }
 function closeSheet(){ sheet.classList.remove("open"); bg.classList.remove("open"); }
 $("#gear").onclick=openSheet; bg.onclick=closeSheet; $("#sheetClose").onclick=closeSheet;
 
-/* ====== modo desarrollador: 13 toques en el tÃ­tulo "Ajustes" ====== */
+/* ====== modo desarrollador: 13 toques en el título "Ajustes" ====== */
 function aplicarDev(){ sheet.classList.toggle("dev", !!cfg.dev); }
 aplicarDev();
 {
@@ -1092,8 +1091,8 @@ const isIOS = /iPad|iPhone|iPod/.test(_ua) || (navigator.platform==="MacIntel" &
 const isAndroid = /Android/.test(_ua);
 (function(){
   const el=$("#vnote"); if(!el) return;
-  if(isIOS) el.innerHTML="<b>Detectado: iPhone/iPad.</b> Aviso importante: en iOS, Safari (y cualquier navegador, porque todos usan su motor) solo puede usar voces bÃ¡sicas del sistema. Las voces <b>Premium</b> que descargues no llegan a la web y no hay forma de forzarlas. La voz natural de verdad llegarÃ¡ con audio pre-generado.";
-  else if(isAndroid) el.innerHTML="<b>Detectado: Android.</b> AquÃ­ sÃ­ mejora. Ajustes â busca <b>âtexto a vozâ</b> â motor <b>Speech Services by Google</b> â descarga una voz en espaÃ±ol, y luego elÃ­gela aquÃ­ abajo.";
+  if(isIOS) el.innerHTML="<b>Detectado: iPhone/iPad.</b> Aviso importante: en iOS, Safari (y cualquier navegador, porque todos usan su motor) solo puede usar voces básicas del sistema. Las voces <b>Premium</b> que descargues no llegan a la web y no hay forma de forzarlas. La voz natural de verdad llegará con audio pre-generado.";
+  else if(isAndroid) el.innerHTML="<b>Detectado: Android.</b> Aquí sí mejora. Ajustes → busca <b>“texto a voz”</b> → motor <b>Speech Services by Google</b> → descarga una voz en español, y luego elígela aquí abajo.";
   else el.innerHTML="<b>Navegador de escritorio.</b> Elige abajo la voz que mejor suene (en Chrome suelen aparecer las de Google).";
 })();
 
@@ -1101,10 +1100,10 @@ function poblarSelectorVoces(){
   const sel=document.querySelector("#voiceSel"); if(!sel) return;
   const es=voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
   const lista=es.length?es:voices;
-  if(!lista.length){ sel.innerHTML="<option>Sin voces disponibles aÃºnâ¦</option>"; return; }
+  if(!lista.length){ sel.innerHTML="<option>Sin voces disponibles aún…</option>"; return; }
   sel.innerHTML="";
   lista.forEach(v=>{ const o=document.createElement("option");
-    o.value=v.voiceURI; o.textContent=`${v.name} Â· ${v.lang}`;
+    o.value=v.voiceURI; o.textContent=`${v.name} · ${v.lang}`;
     if(voz && v.voiceURI===voz.voiceURI) o.selected=true; sel.appendChild(o); });
 }
 { const sel=$("#voiceSel"); if(sel) sel.onchange=()=>{ cfg.voiceURI=sel.value; voz=voices.find(v=>v.voiceURI===cfg.voiceURI)||voz; save(); }; }
@@ -1112,8 +1111,8 @@ function poblarSelectorVoces(){
 poblarSelectorVoces();
 
 const speed=$("#speed"), speedVal=$("#speedVal");
-speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"Ã";
-speed.oninput=speed.onchange=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"Ã"; if(iaAudio) aplicarVel(); save(); };
+speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"×";
+speed.oninput=speed.onchange=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; if(iaAudio) aplicarVel(); save(); };
 
 const workerInput=$("#workerUrl"); workerInput.value=cfg.workerUrl||"";
 function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); comprobarVersion(); cargarCatalogo(); }
@@ -1122,33 +1121,33 @@ $("#reloadNews").onclick=aplicarWorker;
 
 async function comprobarVersion(){
   const el=$("#vermeta"); if(!el) return;
-  if(!cfg.workerUrl){ el.textContent = "App v"+APP_VER+" Â· sin Worker (mostrando ejemplos)"; return; }
-  el.textContent = "App v"+APP_VER+" Â· comprobando Workerâ¦";
+  if(!cfg.workerUrl){ el.textContent = "App v"+APP_VER+" · sin Worker (mostrando ejemplos)"; return; }
+  el.textContent = "App v"+APP_VER+" · comprobando Worker…";
   try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
     const d = await (await fetch(cfg.workerUrl + sep + "version=1", { headers:{ "Accept":"application/json" } })).json();
     if(d && d.version){
       const voz = d.azure ? "voz Azure lista" : "falta AZURE_KEY/REGION";
       const ia  = d.ia ? "IA lista" : "falta CF_ACCOUNT_ID/TOKEN";
-      el.textContent = "App v"+APP_VER+" Â· Worker v"+d.version+" Â· "+voz+" Â· "+ia;
+      el.textContent = "App v"+APP_VER+" · Worker v"+d.version+" · "+voz+" · "+ia;
     }else{
-      el.textContent = "App v"+APP_VER+" Â· Worker ANTIGUO (sin versiÃ³n): vuelve a desplegar el worker.js";
+      el.textContent = "App v"+APP_VER+" · Worker ANTIGUO (sin versión): vuelve a desplegar el worker.js";
     }
   }catch(e){
-    el.textContent = "App v"+APP_VER+" Â· no respondiÃ³ el Worker (Â¿URL correcta?)";
+    el.textContent = "App v"+APP_VER+" · no respondió el Worker (¿URL correcta?)";
   }
 }
 
-/* ====== catÃ¡logo de medios y bÃºsquedas (se piden al Worker, asÃ­ no hay que tocar la app si aÃ±ades fuentes) ====== */
+/* ====== catálogo de medios y búsquedas (se piden al Worker, así no hay que tocar la app si añades fuentes) ====== */
 async function cargarCatalogo(){
   const nota=$("#fuentesNota");
-  if(!cfg.workerUrl){ if(nota) nota.textContent="Configura tu Worker arriba para elegir quÃ© medios entran en el informativo."; renderFuentes(); renderBusquedas(); return; }
+  if(!cfg.workerUrl){ if(nota) nota.textContent="Configura tu Worker arriba para elegir qué medios entran en el informativo."; renderFuentes(); renderBusquedas(); return; }
   try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
     CATALOGO = await (await fetch(cfg.workerUrl + sep + "catalogo=1", { headers:{ "Accept":"application/json" } })).json();
     if(nota) nota.textContent = "Desmarca lo que no quieras escuchar.";
   }catch(e){
-    if(nota) nota.textContent = "No se pudo leer el catÃ¡logo del Worker (Â¿estÃ¡ actualizado?).";
+    if(nota) nota.textContent = "No se pudo leer el catálogo del Worker (¿está actualizado?).";
   }
   renderFuentes(); renderBusquedas();
 }
@@ -1191,7 +1190,7 @@ function renderBusquedas(){
 function renderTerminos(){
   const cont=$("#terminosChips"); if(!cont) return;
   cont.innerHTML = cfg.terminos.map((t,i)=>
-    `<button type="button" class="chip on" data-ti="${i}">${t}<span class="x">â</span></button>`
+    `<button type="button" class="chip on" data-ti="${i}">${t}<span class="x">✕</span></button>`
   ).join("");
   cont.querySelectorAll("[data-ti]").forEach(b=> b.onclick = ()=>{
     cfg.terminos.splice(+b.dataset.ti,1); save(); renderTerminos(); aplicarWorker();
@@ -1232,7 +1231,7 @@ comprobarVersion();
 render();
 cargarNoticias();
 
-/* ====== pantalla de carga: letras negras que convergen y se vuelven nÃ­tidas ====== */
+/* ====== pantalla de carga: letras negras que convergen y se vuelven nítidas ====== */
 (function(){
   const wrap=document.getElementById("loader"), cv=document.getElementById("loaderCv");
   if(!wrap||!cv) return;
@@ -1244,7 +1243,7 @@ cargarNoticias();
   const TEXT="Lo Esencial", INK="#1B1712";
 
   let fs=Math.min(W*0.155, H*0.4);
-  const CY = H*0.40;   // centro vertical del logo durante la animaciÃ³n: media-alta, no el centro exacto
+  const CY = H*0.40;   // centro vertical del logo durante la animación: media-alta, no el centro exacto
   function fontAt(px){ return SERIF.replace("FS", px+"px"); }
   // muestrear el texto destino
   const off=document.createElement("canvas"); off.width=W; off.height=H;
@@ -1273,7 +1272,7 @@ cargarNoticias();
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   const WANDER=900, CONVERGE=2100, HOLD=950, LIFT=1600;
   const T_HOLD_END=WANDER+CONVERGE+HOLD, T_END=T_HOLD_END+LIFT;
-  // destino: la posiciÃ³n y tamaÃ±o del tÃ­tulo de la app
+  // destino: la posición y tamaño del título de la app
   const mast=document.querySelector(".masthead");
   let tX=W/2, tY=H*0.12, tFs=fs*0.45;
   if(mast){ const rc=mast.getBoundingClientRect(); tX=(rc.left+rc.width/2)*dpr; tY=(rc.top+rc.height/2)*dpr; tFs=parseFloat(getComputedStyle(mast).fontSize)*dpr; }
@@ -1298,7 +1297,7 @@ cargarNoticias();
         p.x+=(p.tx-p.x)*0.10*(0.35+kk); p.y+=(p.ty-p.y)*0.10*(0.35+kk);
         ctx.fillText(p.ch,p.x,p.y); }
     }else if(t<T_END){
-      // las letras de los bordes se desvanecen y el tÃ­tulo sube a su sitio
+      // las letras de los bordes se desvanecen y el título sube a su sitio
       const lk=(t-T_HOLD_END)/LIFT, le=lk<0.5?4*lk*lk*lk:1-Math.pow(-2*lk+2,3)/2;
       ctx.globalAlpha=1-le; ctx.font=particleFont;
       for(const p of P) ctx.fillText(p.ch,p.x,p.y);
