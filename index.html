@@ -312,7 +312,7 @@
 
       <h2>Velocidad de lectura</h2>
       <div class="row" style="border:none;">
-        <input type="range" id="speed" min="0.85" max="1.2" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
+        <input type="range" id="speed" min="0.5" max="2.0" step="0.05" value="1" class="slider" aria-label="Velocidad de lectura">
         <span class="data" id="speedVal" style="min-width:48px; text-align:right;">1.00×</span>
       </div>
 
@@ -412,7 +412,7 @@ const TONO_COLOR = { positiva:"var(--pos)", neutra:"var(--neu)", negativa:"var(-
 const TONO_LABEL = { positiva:"Positiva", neutra:"Neutra", negativa:"Negativa" };
 const DUR_BLOCKS_DEPRECATED = null;
 const CONNECTORS = ["", "Cambiamos de tema.", "En otro orden de cosas.", "Seguimos.", "Mientras tanto.", "Y antes de cerrar,"];
-const CONNECTORS_IRONIA = ["", "Cómo no, otra cosa más.", "Por si te faltaban motivos,", "Atención, que viene una de las buenas.", "Y mientras nadie miraba,", "Para rematar la función,"];
+const CONNECTORS_IRONIA = ["", "Cómo no, otra cosa más.", "Por si te faltaban motivos,", "Atención, que viene una de las buenas.", "Y mientras nadie miraba,", "Para rematar la función,", "Lo de siempre:", "Como era de esperar,", "Y en otro orden de cosas,", "Siguiendo la tónica,", "Y mientras tanto,", "Pues bien,", "Dicho esto,", "A todo esto,", "Y por si faltaba algo,", "Sin ir más lejos,"];
 
 /* ====== estado ====== */
 const store = {
@@ -473,8 +473,9 @@ const FIRMAS = {
     `Otra vuelta al sol. {F}. ${NOMBRE} al habla, con lo que pasó y un par de cejas levantadas.`,
     `Buenas. {F}. Aquí ${NOMBRE}: la actualidad, servida con una sonrisa de medio lado.`,
     `{F}. ${NOMBRE}, tu dosis diaria de realidad con guarnición de ironía.`
-  ]
-};
+  ,`{F}. Hoy también hubo noticias. ${NOMBRE} las cuenta, sin anestesia.`,
+`${NOMBRE}. {F}. Sin artificios: lo que pasó y algo de ironía.`
+]};
 const CIERRES = {
   serio:[
     "Esto ha sido todo. Buenos días.",
@@ -501,7 +502,10 @@ const CIERRES = {
     "Hasta aquí. Si mañana el mundo sigue en pie, te lo cuento. Descansa.",
     "Cerramos. Ya tienes munición para las conversaciones de hoy. Adiós.",
     "Fin. La realidad seguirá ahí mañana, puntual y sin avisar. Hasta entonces."
-  ]
+  ,
+"Esto fue todo. El universo sigue expandiéndose, tú ya estás al día.",
+"Eso es todo lo que importaba hoy. Lo demás es ruido. Buenas noches."
+]
 };
 
 function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
@@ -711,6 +715,7 @@ function mapItem(r){
     url: r.url || ""
   };
 }
+function limpiarIATexto(t){ if(!t) return t; const PR=[/^(lo cierto (no |)es que[^,]*,?\s*)/i,/^(en realidad[^,]*,?\s*)/i,/^(la realidad es que[^,]*,?\s*)/i,/^(lo cierto no es eso[^,]*,?\s*)/i,/^(sin embargo[^,]*,?\s*)/i]; let s=t.trim(); for(const re of PR){ s=s.replace(re,""); } return s.charAt(0).toUpperCase()+s.slice(1); }
 /* ====== uso de IA: contador estimado (el real está en Cloudflare) ====== */
 function hoyStr(){ return new Date().toISOString().slice(0,10); }
 function neuronas(){ const u = store.get("loesencial_ia_v2", {fecha:hoyStr(), c:0}); if(u.fecha!==hoyStr()){ u.fecha=hoyStr(); u.c=0; } return u; }
@@ -774,8 +779,8 @@ async function mejorarSeleccion(items){
         try{
           const u = cfg.workerUrl + sep + "resume=" + encodeURIComponent(fuente.slice(0,500)) + "&tono=" + encodeURIComponent(cfg.tono);
           const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
-          const t = (d.texto||"").trim();
-          if(t){ it.iaTexto = t; contarIA(1); cambios=true; } else it.iaFail = true;
+          const t = limpiarIATexto((d.texto||"").trim());
+              if(t){ it.iaTexto = t; contarIA(1); cambios=true; } else it.iaFail = true;
         }catch(e){ it.iaFail = true; }
       }
       if(cfg.explicaAuto && !it.iaExplica && !it.iaExplicaFail){
@@ -1001,7 +1006,7 @@ function jumpTo(i){
   if(i<0 || !playing) return;          // no arranca solo; solo salta si ya está sonando
   if(usandoIA()){
     if(!iaSegs.length) construirColaIA();
-    pararIA(); iaPos=i; const myGen=++gen; playSegIA(myGen); return;
+    pararIA(); iaPos=iaSegs.findIndex(s=>s.seg===i); if(iaPos<0) iaPos=0; const myGen=++gen; playSegIA(myGen); return;
   }
   if(!queue.length) construirCola();
   const pos = queue.findIndex(c=>c.seg===i);
@@ -1104,12 +1109,12 @@ function poblarSelectorVoces(){
     if(voz && v.voiceURI===voz.voiceURI) o.selected=true; sel.appendChild(o); });
 }
 { const sel=$("#voiceSel"); if(sel) sel.onchange=()=>{ cfg.voiceURI=sel.value; voz=voices.find(v=>v.voiceURI===cfg.voiceURI)||voz; save(); }; }
-{ const vs=$("#vozSel"); if(vs){ if(!/^es-/.test(cfg.vozIA||"")){ cfg.vozIA="es-ES-ElviraNeural"; save(); } vs.value=cfg.vozIA; vs.onchange=()=>{ cfg.vozIA=vs.value; iaB64={}; iaSegs=[]; iaPos=0; save(); }; } }
+{ const vs=$("#vozSel"); if(vs){ if(!/^es-/.test(cfg.vozIA||"")){ cfg.vozIA="es-ES-ElviraNeural"; save(); } vs.value=cfg.vozIA; vs.onchange=()=>{ cfg.vozIA=vs.value; iaB64={}; iaSegs=[]; iaPos=0; queue=[]; qi=0; save(); }; } }
 poblarSelectorVoces();
 
 const speed=$("#speed"), speedVal=$("#speedVal");
 speed.value=cfg.speed; speedVal.textContent=(+cfg.speed).toFixed(2)+"×";
-speed.oninput=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; if(iaAudio) aplicarVel(); save(); };
+speed.oninput=speed.onchange=()=>{ cfg.speed=+speed.value; speedVal.textContent=cfg.speed.toFixed(2)+"×"; if(iaAudio) aplicarVel(); save(); };
 
 const workerInput=$("#workerUrl"); workerInput.value=cfg.workerUrl||"";
 function aplicarWorker(){ cfg.workerUrl=workerInput.value.trim(); save(); cargarNoticias(); comprobarVersion(); cargarCatalogo(); }
