@@ -78,7 +78,7 @@
   .seg .head{display:flex; align-items:center; gap:10px; margin-bottom:7px;}
   .seg .dot{width:9px; height:9px; border-radius:50%; flex:0 0 auto;}
   .seg .marker{font-family:var(--sans); font-size:11px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--muted);}
-  .ask{margin-left:auto; width:26px; height:26px; flex:0 0 auto; border-radius:50%; border:1px solid var(--line); background:transparent; color:var(--muted); font-family:var(--serif); font-weight:700; font-size:15px; line-height:1; cursor:pointer;}
+  .ask{background:transparent; cursor:pointer;}
   .ask.on{border-color:var(--accent); color:var(--accent);}
   .seg .body{font-size:19px;}
   .seg.special .body{font-family:var(--sans); font-weight:500; font-size:17.5px;}
@@ -333,7 +333,7 @@
 "use strict";
 
 const NOMBRE = "Lo Esencial";
-const APP_VER = "11";   // se ve en Ajustes → Fuente de noticias
+const APP_VER = "13";   // se ve en Ajustes → Fuente de noticias
 const ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
@@ -422,13 +422,15 @@ const store = {
 const cfg = store.get("loesencial_cfg", {
   dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:false, explicaAuto:false,
   tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural",
-  intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres"],
+  intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres","deportes"],
   fuentesSel: null,           // null = todos los medios; si no, array de ids de FEEDS
-  busquedas: ["argentina","galicia","vigo","morrazo","bueu","medioambiente","mujeres"],
+  busquedas: ["argentina","galicia","vigo","morrazo","bueu","medioambiente","mujeres","deportes"],
   terminos: [],               // términos de búsqueda libres, p. ej. nombres propios
   dev: false                  // modo desarrollador (toca el título de Ajustes 13 veces)
 });
 let CATALOGO = { fuentes: [], intereses: [] };
+if(!cfg.busquedas.includes("deportes")) cfg.busquedas.push("deportes");
+if(!cfg.intereses.includes("deportes")) cfg.intereses.push("deportes");
 
 /* ====== generación del guion (reglas, sin IA) ====== */
 /* ====== limpieza y clasificación de noticias reales ====== */
@@ -529,7 +531,7 @@ function generarGuion(){
     for(const it of orden){
       sel.push(it);
       w += (it.texto+" "+(it.ctx||"")).split(/\s+/).length;
-      if(w>=budget) break;
+      if(sel.length >= 20 || w>=budget) break;
     }
   }
   items = sel;
@@ -798,7 +800,7 @@ async function mejorarSeleccion(items){
 function urlNoticias(){
   if(!cfg.workerUrl) return "";
   const sep = cfg.workerUrl.includes("?") ? "&" : "?";
-  const p = [];
+  const p = ["n=20"];
   if(cfg.fuentesSel && cfg.fuentesSel.length) p.push("fuentes="+cfg.fuentesSel.join(","));
   if(cfg.busquedas && cfg.busquedas.length) p.push("intereses="+cfg.busquedas.join(","));
   if(cfg.terminos && cfg.terminos.length) p.push("terminos="+cfg.terminos.map(encodeURIComponent).join(","));
