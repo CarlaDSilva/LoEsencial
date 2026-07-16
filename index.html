@@ -337,8 +337,19 @@
 <script>
 "use strict";
 
+/* ── v17: Safari iOS SW stale-cache fix + error recovery ── */
+window.onerror = function(msg, src, line) {
+  document.body.innerHTML = '<div style="padding:2rem;font-family:sans-serif"><h2>Error al cargar</h2><p>'+msg+' (línea '+line+')</p><button onclick="(async()=>{if(navigator.serviceWorker){const r=await navigator.serviceWorker.getRegistrations();for(const x of r)await x.unregister();}const k=await caches.keys();for(const c of k)await caches.delete(c);location.reload(true)})()">⟳ Borrar caché y recargar</button></div>';
+};
+// Unregister any stale service workers from previous versions
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    for (var r of regs) r.unregister();
+  });
+}
+
 const NOMBRE = "Lo Esencial";
-const APP_VER = "13";   // se ve en Ajustes → Fuente de noticias
+const APP_VER = "17";   // se ve en Ajustes → Fuente de noticias
 const ES_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true"><path d="M8 5.2v13.6a1 1 0 0 0 1.5.86l11-6.8a1 1 0 0 0 0-1.72l-11-6.8A1 1 0 0 0 8 5.2z"/></svg>';
