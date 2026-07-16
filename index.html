@@ -700,7 +700,7 @@ function mapItem(r){
   if(!titulo || esJunk(titulo)) return null;             // fuera sorteos, directos, etc.
   let desc = (r.texto || "");
   if(desc.toLowerCase().startsWith(tituloRaw.toLowerCase().slice(0,20))) desc = desc.slice(tituloRaw.length);
-  desc = desc.replace(/^[.\s|·–-]+/,"").trim();
+  desc = desc.replace(/^[\s…\.·|–-]+/,"").trim();
   const resumen = limpiarResumen(desc);
   const textoLimpio = resumen ? `${titulo}. ${resumen}` : `${titulo}.`;
   return {
