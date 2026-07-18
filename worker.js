@@ -1,40 +1,40 @@
 /**
- * LO ESENCIAL — Worker de noticias (Cloudflare)
+ * LO ESENCIAL â Worker de noticias (Cloudflare)
  * ------------------------------------------------------------------
  * Trae varios RSS, los limpia, deduplica, clasifica el tono por palabras
  * clave y los devuelve como JSON para la PWA. Sin IA, sin coste de API.
  *
  * DESPLIEGUE (desde el navegador, sin terminal):
- *   1. Cloudflare → Workers & Pages → Create → Worker.
+ *   1. Cloudflare â Workers & Pages â Create â Worker.
  *   2. Pega este archivo entero en el editor y pulsa Deploy.
  *   3. Copia la URL (algo como https://lo-esencial.TUNOMBRE.workers.dev)
- *      y pégala en Lo Esencial → Ajustes → Fuente de noticias.
+ *      y pÃ©gala en Lo Esencial â Ajustes â Fuente de noticias.
  *
- * AÑADIR / VERIFICAR FEEDS: edita el array FEEDS de abajo. Cada feed lleva
+ * AÃADIR / VERIFICAR FEEDS: edita el array FEEDS de abajo. Cada feed lleva
  * su "tema" (debe coincidir con los temas de la app) y el nombre de la fuente.
- * Los feeds que fallen se ignoran solos, así que puedes probar URLs sin miedo.
+ * Los feeds que fallen se ignoran solos, asÃ­ que puedes probar URLs sin miedo.
  */
 
-const WORKER_VER = "10-fuentes2";   // súbelo en cada cambio; míralo abriendo  TUWORKER/?version
+const WORKER_VER = "10-fuentes2";   // sÃºbelo en cada cambio; mÃ­ralo abriendo  TUWORKER/?version
 
 const FEEDS = [
   { id:"bbc",            url: "https://feeds.bbci.co.uk/mundo/rss.xml",                                  tema: "internacional",  fuente: "BBC Mundo",        grupo: "Internacional" },
-  { id:"elpais",         url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",        tema: "españa",         fuente: "El País",          grupo: "España" },
-  { id:"eldiario",       url: "https://www.eldiario.es/rss/",                                            tema: "españa",         fuente: "elDiario.es",      grupo: "España" },
-  { id:"20min",          url: "https://www.20minutos.es/rss/",                                           tema: "españa",         fuente: "20minutos",        grupo: "España" },
-  { id:"confidencial",   url: "https://www.elconfidencial.com/rss/",                                     tema: "españa",         fuente: "El Confidencial",  grupo: "España" },
-  { id:"xataka",         url: "https://feeds.weblogssl.com/xataka2",                                     tema: "tecnologia",     fuente: "Xataka",           grupo: "Tecnología" },
-  { id:"genbeta",        url: "https://www.genbeta.com/index.xml",                                       tema: "informatica",    fuente: "Genbeta",          grupo: "Tecnología" },
+  { id:"elpais",         url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada",        tema: "espaÃ±a",         fuente: "El PaÃ­s",          grupo: "EspaÃ±a" },
+  { id:"eldiario",       url: "https://www.eldiario.es/rss/",                                            tema: "espaÃ±a",         fuente: "elDiario.es",      grupo: "EspaÃ±a" },
+  { id:"20min",          url: "https://www.20minutos.es/rss/",                                           tema: "espaÃ±a",         fuente: "20minutos",        grupo: "EspaÃ±a" },
+  { id:"confidencial",   url: "https://www.elconfidencial.com/rss/",                                     tema: "espaÃ±a",         fuente: "El Confidencial",  grupo: "EspaÃ±a" },
+  { id:"xataka",         url: "https://feeds.weblogssl.com/xataka2",                                     tema: "tecnologia",     fuente: "Xataka",           grupo: "TecnologÃ­a" },
+  { id:"genbeta",        url: "https://www.genbeta.com/index.xml",                                       tema: "informatica",    fuente: "Genbeta",          grupo: "TecnologÃ­a" },
   { id:"marca",          url: "https://e00-marca.uecdn.es/rss/portada.xml",                              tema: "deportes",       fuente: "Marca",             grupo: "Deportes" },
-  { id:"elpais-ciencia", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/ciencia/portada",  tema: "ciencia",  fuente: "El País Ciencia",  grupo: "Ciencia y cultura" },
-  { id:"elpais-cultura", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/cultura/portada",  tema: "cultura",  fuente: "El País Cultura",  grupo: "Ciencia y cultura" },
+  { id:"elpais-ciencia", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/ciencia/portada",  tema: "ciencia",  fuente: "El PaÃ­s Ciencia",  grupo: "Ciencia y cultura" },
+  { id:"elpais-cultura", url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/cultura/portada",  tema: "cultura",  fuente: "El PaÃ­s Cultura",  grupo: "Ciencia y cultura" },
   { id:"muy",            url: "https://www.muyinteresante.com/feed/",                                    tema: "ciencia",        fuente: "Muy Interesante",  grupo: "Ciencia y cultura", site:"muyinteresante.com", region:"ES" },
-  { id:"elpais-economia",url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada", tema: "economia", fuente: "El País Economía", grupo: "Economía" },
+  { id:"elpais-economia",url: "https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/economia/portada", tema: "economia", fuente: "El PaÃ­s EconomÃ­a", grupo: "EconomÃ­a" },
   { id:"vigo-concello",  url: "https://hoxe.vigo.org/actualidade/rss.php?lang=cas",                      tema: "vigo",           fuente: "Concello de Vigo",  grupo: "Galicia y Vigo" },
 
-  // --- Argentina: fuentes que pide Carla. Llevan "site" para el respaldo obligatorio por búsqueda. ---
-  { id:"clarin",         url: "https://www.clarin.com/rss/lo-ultimo/",                                   tema: "argentina",      fuente: "Clarín",            grupo: "Argentina", site:"clarin.com",     region:"AR" },
-  { id:"lanacion",       url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml",       tema: "argentina",      fuente: "La Nación",         grupo: "Argentina", site:"lanacion.com.ar",region:"AR" },
+  // --- Argentina: fuentes que pide Carla. Llevan "site" para el respaldo obligatorio por bÃºsqueda. ---
+  { id:"clarin",         url: "https://www.clarin.com/rss/lo-ultimo/",                                   tema: "argentina",      fuente: "ClarÃ­n",            grupo: "Argentina", site:"clarin.com",     region:"AR" },
+  { id:"lanacion",       url: "https://www.lanacion.com.ar/arc/outboundfeeds/rss/?outputType=xml",       tema: "argentina",      fuente: "La NaciÃ³n",         grupo: "Argentina", site:"lanacion.com.ar",region:"AR" },
   { id:"infobae",        url: "https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml",           tema: "argentina",      fuente: "Infobae",           grupo: "Argentina", site:"infobae.com",    region:"AR" },
   { id:"correogallego",    url:"https://www.elcorreogallego.es/rss",          tema:"galicia",  fuente:"El Correo Gallego",      grupo:"Galicia" },
   { id:"diariopontevedra", url:"https://www.diariodepontevedra.es/rss",       tema:"galicia",  fuente:"Diario de Pontevedra",   grupo:"Galicia" },
@@ -44,8 +44,8 @@ const FEEDS = [
 // Fuentes que Carla exige que SIEMPRE aporten algo: si su RSS no da resultados, se buscan por Google News (site:)
 const PRIORITARIAS = FEEDS.filter(f => f.site);
 
-/* ====== Intereses por búsqueda (Google News RSS): cubren Argentina, Galicia local, temas y
-   cualquier término libre que escriba la persona. No dependen de que el medio tenga RSS propio. ====== */
+/* ====== Intereses por bÃºsqueda (Google News RSS): cubren Argentina, Galicia local, temas y
+   cualquier tÃ©rmino libre que escriba la persona. No dependen de que el medio tenga RSS propio. ====== */
 function regionGNews(region){
   return region === "AR" ? { hl:"es-419", gl:"AR", ceid:"AR:es" } : { hl:"es-ES", gl:"ES", ceid:"ES:es" };
 }
@@ -58,11 +58,11 @@ function gnewsUrl(p){
 }
 const INTERESES_PRESET = {
   argentina:        { label:"Argentina",      tema:"argentina",    kind:"geo",    geo:"Argentina", region:"AR" },
-  mujeres:          { label:"Mujeres",        tema:"mujeres",      kind:"search", q:"(mujer OR mujeres) (logra OR consigue OR rompe OR primera OR pionera OR récord OR premio OR histórico)", region:"ES", when:"4d" },
-  medioambiente:    { label:"Medio ambiente", tema:"medioambiente",kind:"search", q:"medio ambiente (España OR Galicia OR clima OR sostenibilidad)", region:"ES", when:"3d" },
+  mujeres:          { label:"Mujeres",        tema:"mujeres",      kind:"search", q:"(mujer OR mujeres) (logra OR consigue OR rompe OR primera OR pionera OR rÃ©cord OR premio OR histÃ³rico)", region:"ES", when:"4d" },
+  medioambiente:    { label:"Medio ambiente", tema:"medioambiente",kind:"search", q:"medio ambiente (EspaÃ±a OR Galicia OR clima OR sostenibilidad)", region:"ES", when:"3d" },
   galicia:          { label:"Galicia",        tema:"galicia",      kind:"search", q:"Galicia (site:farodevigo.es OR site:lavozdegalicia.es OR site:diariodepontevedra.es)", region:"ES", when:"2d" },
   vigo:             { label:"Vigo",           tema:"vigo",         kind:"search", q:"Vigo (site:farodevigo.es OR site:lavozdegalicia.es OR site:atlantico.net)", region:"ES", when:"2d" },
-  morrazo:          { label:"O Morrazo",      tema:"morrazo",      kind:"search", q:"(Morrazo OR Cangas OR Moaña OR Bueu) (site:farodevigo.es OR site:lavozdegalicia.es OR site:diariodepontevedra.es)", region:"ES", when:"4d" },
+  morrazo:          { label:"O Morrazo",      tema:"morrazo",      kind:"search", q:"(Morrazo OR Cangas OR MoaÃ±a OR Bueu) (site:farodevigo.es OR site:lavozdegalicia.es OR site:diariodepontevedra.es)", region:"ES", when:"4d" },
   bueu:             { label:"Bueu",           tema:"bueu",         kind:"search", q:"Bueu (site:farodevigo.es OR site:lavozdegalicia.es OR site:diariodepontevedra.es)", region:"ES", when:"6d" },
 };
 
@@ -72,11 +72,11 @@ const MODELS = [                       // prueba en orden; si uno falla/jubilan,
   "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
 ];
 const MAX_ITEMS = 50;           // tope de noticias devueltas
-const VENTANA_HORAS = 72;       // antigüedad máxima
+const VENTANA_HORAS = 72;       // antigÃ¼edad mÃ¡xima
 const CACHE_SEG = 900;          // cachea el resultado 15 min en el edge
 
-const PALABRAS_NEG = ["muert","herid","ataque","guerra","conflicto","crisis","violencia","incendio","accidente","víctima","desplaz","tensión","amenaza","recesión","despido","temporal","alerta","condena"];
-const PALABRAS_POS = ["acuerdo","récord","avance","mejora","premio","rescate","descubr","éxito","crece","recuperación","inaugura","histórico","logro","solución","ayuda"];
+const PALABRAS_NEG = ["muert","herid","ataque","guerra","conflicto","crisis","violencia","incendio","accidente","vÃ­ctima","desplaz","tensiÃ³n","amenaza","recesiÃ³n","despido","temporal","alerta","condena"];
+const PALABRAS_POS = ["acuerdo","rÃ©cord","avance","mejora","premio","rescate","descubr","Ã©xito","crece","recuperaciÃ³n","inaugura","histÃ³rico","logro","soluciÃ³n","ayuda"];
 
 function cors() {
   return {
@@ -92,7 +92,7 @@ function decode(s) {
     .replace(/<[^>]+>/g, " ")
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-    .replace(/&nbsp;/g, " ").replace(/&hellip;/g, "…").replace(/&mdash;/g, "—")
+    .replace(/&nbsp;/g, " ").replace(/&hellip;/g, "â¦").replace(/&mdash;/g, "â")
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n))
     .replace(/\s+/g, " ").trim();
 }
@@ -103,7 +103,7 @@ function tag(block, name) {
 }
 
 function link(block) {
-  // RSS: <link>url</link>  ·  Atom: <link href="url"/>
+  // RSS: <link>url</link>  Â·  Atom: <link href="url"/>
   const rss = tag(block, "link");
   if (rss && /^https?:/.test(decode(rss))) return decode(rss);
   const atom = block.match(/<link[^>]*href="([^"]+)"[^>]*\/?>/i);
@@ -117,9 +117,9 @@ function tono(texto) {
   return "neutra";
 }
 
-const MORRAZO_RE = /\b(morrazo|cangas|mo[aã]a)\b/i;
+const MORRAZO_RE = /\b(morrazo|cangas|mo[aÃ£]a)\b/i;
 const BUEU_RE    = /\bbueu\b/i;
-const MUJERES_RE = /(mujer|g[eé]nero|feminism|igualdad|machism|violencia.{0,15}(g[eé]nero|sexual)|brecha.{0,10}salar)/i;
+const MUJERES_RE = /(mujer|g[eÃ©]nero|feminism|igualdad|machism|violencia.{0,15}(g[eÃ©]nero|sexual)|brecha.{0,10}salar)/i;
 const MEDIOAMB_RE = /(medioambiente|medio ambiente|climat|ecolog|sostenib|biodiversid|incendio.{0,10}(bosque|forestal)|contaminaci|vertido)/i;
 function reclasificarTema(titulo, texto, temaDef) {
   const s = titulo + ' ' + texto;
@@ -138,18 +138,18 @@ function parseFeed(xml, feed) {
     if (!titulo) continue;
     let fuenteItem = feed.fuente;
     if (feed.dynamic) {
-      // Google News: cada item trae su medio real en <source>; si no, se intenta sacar del "Título - Medio"
+      // Google News: cada item trae su medio real en <source>; si no, se intenta sacar del "TÃ­tulo - Medio"
       const src = decode(tag(b, "source"));
       if (src) fuenteItem = src;
-      else { const m = titulo.match(/^(.*)\s[-–]\s([^-–]{2,40})$/); if (m) { titulo = m[1].trim(); fuenteItem = m[2].trim(); } }
+      else { const m = titulo.match(/^(.*)\s[-â]\s([^-â]{2,40})$/); if (m) { titulo = m[1].trim(); fuenteItem = m[2].trim(); } }
       if (fuenteItem && titulo.toLowerCase().endsWith(fuenteItem.toLowerCase())) {
-        titulo = titulo.slice(0, titulo.length - fuenteItem.length).replace(/[\s-–]+$/, "").trim();
+        titulo = titulo.slice(0, titulo.length - fuenteItem.length).replace(/[\s-â]+$/, "").trim();
       }
       if (!fuenteItem) fuenteItem = "Google Noticias";
     }
-    // en feeds dinámicos, la <description> suele ser una mezcla de enlaces relacionados: no sirve como resumen
+    // en feeds dinÃ¡micos, la <description> suele ser una mezcla de enlaces relacionados: no sirve como resumen
     let desc = feed.dynamic ? "" : decode(tag(b, "description") || tag(b, "summary") || tag(b, "content"));
-    if (desc.length > 220) desc = desc.slice(0, 217).replace(/\s+\S*$/, "") + "…";
+    if (desc.length > 220) desc = desc.slice(0, 217).replace(/\s+\S*$/, "") + "â¦";
     const fechaRaw = decode(tag(b, "pubDate") || tag(b, "updated") || tag(b, "published"));
     const ts = fechaRaw ? Date.parse(fechaRaw) : Date.now();
     const texto = desc && desc.toLowerCase() !== titulo.toLowerCase() ? `${titulo}. ${desc}` : titulo + ".";
@@ -199,8 +199,8 @@ async function construir(sel) {
   let items = [];
   for (const l of listas) if (l.status === "fulfilled") items = items.concat(l.value);
 
-  // RESPALDO OBLIGATORIO: si una fuente prioritaria seleccionada (Clarín, La Nación, Infobae,
-  // elDiarioAR, Muy Interesante) no aportó nada por su RSS, se buscan sus noticias por Google News.
+  // RESPALDO OBLIGATORIO: si una fuente prioritaria seleccionada (ClarÃ­n, La NaciÃ³n, Infobae,
+  // elDiarioAR, Muy Interesante) no aportÃ³ nada por su RSS, se buscan sus noticias por Google News.
   const prioSel = PRIORITARIAS.filter(f => feedsDirectos.includes(f));
   const faltan = prioSel.filter(f => !items.some(it => it._fid === f.id));
   if (faltan.length) {
@@ -219,15 +219,15 @@ async function construir(sel) {
   let recientes = items.filter(i => i.ts >= limite);
   if (recientes.length < 8) recientes = items; // si hay pocas, relaja el filtro
 
-  // dedupe por título normalizado
+  // dedupe por tÃ­tulo normalizado
   const vistos = new Set(), unicos = [];
   for (const i of recientes) {
-    const k = i.titulo.toLowerCase().replace(/[^a-záéíóúñü0-9 ]/g, "").slice(0, 60);
+    const k = i.titulo.toLowerCase().replace(/[^a-zÃ¡Ã©Ã­Ã³ÃºÃ±Ã¼0-9 ]/g, "").slice(0, 60);
     if (vistos.has(k)) continue;
     vistos.add(k); unicos.push(i);
   }
 
-  // relevancia: recencia (0–80) + algo de aleatoriedad suave para variar
+  // relevancia: recencia (0â80) + algo de aleatoriedad suave para variar
   const ahora = Date.now();
   unicos.forEach(i => {
     const horas = (ahora - i.ts) / 3600000;
@@ -245,12 +245,12 @@ async function construir(sel) {
   };
 }
 
-/* ==== CREDENCIALES — NO se escriben aquí; se añaden como Variables/Secrets del Worker ====
- * En tu Worker → Settings → Variables and Secrets → Add:
- *   · CF_ACCOUNT_ID  (Text)   = tu Account ID            ┐ para los textos (resumen, explica, historia)
- *   · CF_AI_TOKEN    (Secret) = tu API Token de Workers AI ┘
- *   · AZURE_REGION   (Text)   = la región de tu recurso de voz (p. ej. westeurope)  ┐ para la voz neural
- *   · AZURE_KEY      (Secret) = la clave de tu recurso de voz de Azure              ┘
+/* ==== CREDENCIALES â NO se escriben aquÃ­; se aÃ±aden como Variables/Secrets del Worker ====
+ * En tu Worker â Settings â Variables and Secrets â Add:
+ *   Â· CF_ACCOUNT_ID  (Text)   = tu Account ID            â para los textos (resumen, explica, historia)
+ *   Â· CF_AI_TOKEN    (Secret) = tu API Token de Workers AI â
+ *   Â· AZURE_REGION   (Text)   = la regiÃ³n de tu recurso de voz (p. ej. westeurope)  â para la voz neural
+ *   Â· AZURE_KEY      (Secret) = la clave de tu recurso de voz de Azure              â
  *   Guarda y vuelve a desplegar.
  */
 const ACCOUNT_ID  = (typeof globalThis !== "undefined" && globalThis.CF_ACCOUNT_ID) || "";
@@ -283,6 +283,17 @@ function jsonRes(obj, ttl = 0) {
     return new Response(JSON.stringify(obj), { headers });
 }
 
+function estiloTono(tono) {
+  const estilos = {
+    serio:       'con tono serio y formal',
+    amigable:    'con tono amigable y cercano',
+    divulgativo: 'con tono divulgativo y accesible',
+    tecnico:     'con tono técnico y preciso',
+    calmado:     'con tono calmado y sereno',
+  };
+  return estilos[tono] || 'con tono neutro y claro';
+}
+
 async function explicar(url, env) {
   const texto = (url.searchParams.get("explica") || "").slice(0, 500);
   const tono = url.searchParams.get("tono") || "calmado";
@@ -290,7 +301,7 @@ async function explicar(url, env) {
   try {
     const out = await aiText(
       env,
-      "Eres un periodista de radio que resume con rigor. Usa SOLO la información del titular y descripción recibidos. NUNCA inventes cifras, fechas ni detalles no presentes en el texto. Escribe 3 frases completas en español " + estiloTono(tono) + " respondiendo: (1) QUÉ ocurre o cambia exactamente, (2) A QUIÉN afecta y cómo, (3) POR QUÉ es relevante. Si la descripción es muy vaga, basa el resumen solo en el titular con contexto general sin inventar datos específicos. Sin clickbait ni frases vacías.",
+      "Eres un periodista de radio que resume con rigor. Usa SOLO la informaciÃ³n del titular y descripciÃ³n recibidos. NUNCA inventes cifras, fechas ni detalles no presentes en el texto. Escribe 3 frases completas en espaÃ±ol " + estiloTono(tono) + " respondiendo: (1) QUÃ ocurre o cambia exactamente, (2) A QUIÃN afecta y cÃ³mo, (3) POR QUÃ es relevante. Si la descripciÃ³n es muy vaga, basa el resumen solo en el titular con contexto general sin inventar datos especÃ­ficos. Sin clickbait ni frases vacÃ­as.",
       "Explica en pocas palabras el contexto de esta noticia para alguien que no sigue la actualidad:\n\n" + texto, 140);
     return jsonRes({ explica: out }, 86400);
   } catch (e) { return jsonRes({ explica: "", error: String(e) }); }
@@ -303,8 +314,8 @@ async function historiar(url, env) {
   try {
     const out = await aiText(
       env,
-      "Eres un divulgador que da el trasfondo de un tema de actualidad en español, " + estiloTono(tono) + ", con rigor. Cuenta de dónde viene el asunto y por qué ha llegado hasta aquí, sencillo y concreto. Responde en exactamente 3 frases cortas y claras, fáciles de entender a la primera. No repitas el titular.",
-      "Da el contexto histórico y de fondo, en pocas palabras, de este tema:\n\n" + texto, 220);
+      "Eres un divulgador que da el trasfondo de un tema de actualidad en espaÃ±ol, " + estiloTono(tono) + ", con rigor. Cuenta de dÃ³nde viene el asunto y por quÃ© ha llegado hasta aquÃ­, sencillo y concreto. Responde en exactamente 3 frases cortas y claras, fÃ¡ciles de entender a la primera. No repitas el titular.",
+      "Da el contexto histÃ³rico y de fondo, en pocas palabras, de este tema:\n\n" + texto, 220);
     return jsonRes({ historia: out }, 86400);
   } catch (e) { return jsonRes({ historia: "", error: String(e) }); }
 }
@@ -318,8 +329,8 @@ function escXml(s){
   return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&apos;");
 }
 const VOCES_ES = [
-  "es-ES-ElviraNeural","es-ES-AlvaroNeural",     // España
-  "es-MX-DaliaNeural","es-MX-JorgeNeural",       // México
+  "es-ES-ElviraNeural","es-ES-AlvaroNeural",     // EspaÃ±a
+  "es-MX-DaliaNeural","es-MX-JorgeNeural",       // MÃ©xico
   "es-AR-ElenaNeural","es-AR-TomasNeural",       // Argentina
   "es-CO-SalomeNeural","es-US-PalomaNeural"      // Colombia / Latino EEUU
 ];
@@ -379,14 +390,14 @@ async function resumir(url, env) {
   }
 
   const instruccion = fuenteIA !== texto
-    ? "Eres un periodista de radio. Tienes el texto completo del artículo. Escribe un resumen de 3 frases en español " + estiloTono(tono) + " explicando exactamente: (1) qué ocurre o cambia, (2) a quién afecta y cómo, (3) por qué es relevante. Usa solo datos del texto."
-    : "Eres un periodista de radio. Solo tienes el titular y descripción. NO inventes datos concretos. Escribe 2-3 frases en español " + estiloTono(tono) + " con lo que sabes con certeza. Si la descripción es vaga, di lo esencial del titular con contexto general sin fabricar detalles específicos.";
+    ? "Eres un periodista de radio. Tienes el texto completo del artÃ­culo. Escribe un resumen de 3 frases en espaÃ±ol " + estiloTono(tono) + " explicando exactamente: (1) quÃ© ocurre o cambia, (2) a quiÃ©n afecta y cÃ³mo, (3) por quÃ© es relevante. Usa solo datos del texto."
+    : "Eres un periodista de radio. Solo tienes el titular y descripciÃ³n. NO inventes datos concretos. Escribe 2-3 frases en espaÃ±ol " + estiloTono(tono) + " con lo que sabes con certeza. Si la descripciÃ³n es vaga, di lo esencial del titular con contexto general sin fabricar detalles especÃ­ficos.";
 
   try {
     const out = await aiText(env, instruccion, fuenteIA);
     if (!out) return jsonRes({ texto: "" });
     let t = out.replace(/^[\s"]+|[\s"]+$/g,"").replace(/\s+/g," ").trim();
-    t = t.replace(/^(Aqu[ií] te (dejo|presento|ofrezco)[^:]*|A continuaci[oó]n te [^:]*|Por supuesto[,!]?\s+[^:]*|Claro[,!]?\s+[^:]*|Entendido[,!]?\s+[^:]*|Resumen:)[:\s]*/i, "");
+    t = t.replace(/^(Aqu[iÃ­] te (dejo|presento|ofrezco)[^:]*|A continuaci[oÃ³]n te [^:]*|Por supuesto[,!]?\s+[^:]*|Claro[,!]?\s+[^:]*|Entendido[,!]?\s+[^:]*|Resumen:)[:\s]*/i, "");
     return jsonRes({ texto: t.trim() });
   } catch(e) {
     return jsonRes({ texto: "", error: String(e) });
@@ -412,13 +423,13 @@ async function handleRequest(request, env) {
     fuentes: FEEDS.map(f => ({ id:f.id, fuente:f.fuente, grupo:f.grupo, tema:f.tema })),
     intereses: Object.keys(INTERESES_PRESET).map(id => ({ id, label: INTERESES_PRESET[id].label })),
   });
-  if (url.searchParams.has("explica")) return explicar(url);   // IA: contexto
-  if (url.searchParams.has("historia")) return historiar(url); // IA: trasfondo histórico
-  if (url.searchParams.has("tts")) return voz(url);            // voz neural (Azure)
-  if (url.searchParams.has("resume")) return resumir(url);     // IA: reescribir/resumir
+  if (url.searchParams.has("explica")) return explicar(url, env);   // IA: contexto
+  if (url.searchParams.has("historia")) return historiar(url, env); // IA: trasfondo histÃ³rico
+  if (url.searchParams.has("tts")) return voz(url, env);            // voz neural (Azure)
+  if (url.searchParams.has("resume")) return resumir(url, env);     // IA: reescribir/resumir
 
-  // feed de noticias, con caché de borde de 15 min — la clave incluye la selección de fuentes/intereses
-  const fuentesParam = url.searchParams.get("fuentes");      // csv de ids de FEEDS, vacío = todas
+  // feed de noticias, con cachÃ© de borde de 15 min â la clave incluye la selecciÃ³n de fuentes/intereses
+  const fuentesParam = url.searchParams.get("fuentes");      // csv de ids de FEEDS, vacÃ­o = todas
   const interesesParam = url.searchParams.get("intereses");  // csv de ids de INTERESES_PRESET
   const terminosParam = url.searchParams.get("terminos");    // csv de texto libre (encodeURIComponent cada uno)
   const sel = {
