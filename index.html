@@ -662,13 +662,10 @@ function render(){
       html += `<button class="actbtn ask" type="button">Contexto</button>`;
       html += `</div>`;
     }
-    if(it.extra) html += `<div class="deep open"><span class="lbl">Más a fondo</span>${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
-    else if(expl) html += `<div class="deep open" data-loaded="1"><span class="lbl">Más a fondo</span>${expl}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
-    else if(askable) html += `<div class="deep"><span class="lbl">Más a fondo</span><span class="cargando">Pulsa "Contexto" y te lo explican en breve.</span></div>`;
-    if(cfg.workerUrl){
-      html += `<div class="histbox"><span class="lbl">Historia</span><span class="cargando">Cargando trasfondo histórico…</span></div>`;
-    }
-    mk(html, spoken, tasaPara(it), {askable, extra:it.extra||expl, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)}, gitems);
+    if(it.extra) html += `<div class="deep open">${it.extra}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    else if(expl) html += `<div class="deep open" data-loaded="1">${expl}<button class="hear" type="button">${ICON_HEAR}Escuchar</button></div>`;
+    else if(askable) html += `<div class="deep"><span class="cargando">Pulsa "Contexto" y te lo explican en breve.</span></div>`;
+mk(html, spoken, tasaPara(it), {askable, extra:it.extra||expl, fetchText:(it.titulo?it.titulo+". ":"")+(it.descBruta||it.texto)}, gitems);
   });
 
   mk(`<div class="head"><span class="marker">Cierre</span></div><div class="body">${g.cierre}</div>`,
@@ -743,30 +740,31 @@ function pintarNeuronas(){ const el=document.querySelector("#neuronas"); if(el){
 
 async function fetchExplica(texto, deepEl){
   if(deepEl.dataset.loaded) return;
-  deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">Pensando…</span>`;
+  deepEl.innerHTML = `<span class="cargando">Pensando…</span>`;
   try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
-    const u = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
-    const r = await fetch(u, { headers:{ "Accept":"application/json" } });
-    const d = await r.json();
-    const txt = (d.explica||"").trim();
-    if(!txt){
-      const motivo = d.error ? ` (${String(d.error).slice(0,90)})` : "";
-      throw new Error("vacío"+motivo);
-    }
-    contarIA(1);
+    const uExpl = cfg.workerUrl + sep + "explica=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
+    const uHist = cfg.workerUrl + sep + "historia=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
+    const [dExpl, dHist] = await Promise.all([
+      fetch(uExpl).then(r=>r.json()).catch(()=>({})),
+      fetch(uHist).then(r=>r.json()).catch(()=>({})),
+    ]);
+    const txtExpl = (dExpl.explica||"").trim();
+    const txtHist = (dHist.historia||"").trim();
+    const txt = [txtExpl, txtHist].filter(Boolean).join(" ");
+    if(!txt) throw new Error(" (respuesta vacía)");
+    contarIA(txtExpl ? 1 : 0);
+    contarIA(txtHist ? 1 : 0);
     deepEl.dataset.loaded = "1";
-    deepEl.innerHTML = `<span class="lbl">Más a fondo</span>${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
+    deepEl.innerHTML = `${txt}<button class="hear" type="button">${ICON_HEAR}Escuchar</button>`;
     deepEl.querySelector(".hear").addEventListener("click", ev=>{ ev.stopPropagation(); speakAside(txt); });
   }catch(e){
-    deepEl.innerHTML = `<span class="lbl">Más a fondo</span><span class="cargando">No se pudo generar${String(e.message).startsWith("vacío")?String(e.message).slice(5):""}.</span>`;
+    deepEl.innerHTML = `<span class="cargando">No se pudo generar${String(e.message).startsWith(" ")?e.message:""}.</span>`;
   }
 }
 
 async function fetchHistoria(texto, boxEl){
-  if(boxEl.dataset.loaded) return;
-  boxEl.innerHTML = `<span class="lbl">Historia</span><span class="cargando">Buscando el trasfondo…</span>`;
-  try{
+  if(boxEl.dataset.loaded) return;  try{
     const sep = cfg.workerUrl.includes("?") ? "&" : "?";
     const u = cfg.workerUrl + sep + "historia=" + encodeURIComponent((texto||"").slice(0,420)) + "&tono=" + encodeURIComponent(cfg.tono);
     const d = await (await fetch(u, { headers:{ "Accept":"application/json" } })).json();
