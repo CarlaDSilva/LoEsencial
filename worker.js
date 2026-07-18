@@ -264,7 +264,7 @@ for (const model of MODELS) {
 try {
 const d = await env.AI.run(model, {
 messages: [{ role: "system", content: system }, { role: "user", content: user }],
-max_tokens: maxTokens || 240,
+max_tokens: maxTokens || 512,
 });
 const out = ((d && d.response) || "").trim();
 if (out) return out;
@@ -294,6 +294,8 @@ function estiloTono(tono) {
   return estilos[tono] || 'con tono neutro y claro';
 }
 
+const NO_PREAMBLE = "Responde DIRECTAMENTE sin frases introductorias. No uses 'Aquí te dejo', 'A continuación', 'Por supuesto', 'Claro', 'Entendido', 'Resumen:' ni similares. Empieza con el contenido.";
+
 async function explicar(url, env) {
   const texto = (url.searchParams.get("explica") || "").slice(0, 500);
   const tono = url.searchParams.get("tono") || "calmado";
@@ -301,7 +303,7 @@ async function explicar(url, env) {
   try {
     const out = await aiText(
       env,
-      "Eres un periodista de radio que resume con rigor. Usa SOLO la informaciÃ³n del titular y descripciÃ³n recibidos. NUNCA inventes cifras, fechas ni detalles no presentes en el texto. Escribe 3 frases completas en espaÃ±ol " + estiloTono(tono) + " respondiendo: (1) QUÃ ocurre o cambia exactamente, (2) A QUIÃN afecta y cÃ³mo, (3) POR QUÃ es relevante. Si la descripciÃ³n es muy vaga, basa el resumen solo en el titular con contexto general sin inventar datos especÃ­ficos. Sin clickbait ni frases vacÃ­as.",
+      NO_PREAMBLE + " Eres un periodista de radio que resume con rigor. Usa SOLO la informaciÃ³n del titular y descripciÃ³n recibidos. NUNCA inventes cifras, fechas ni detalles no presentes en el texto. Escribe 3 frases completas en espaÃ±ol " + estiloTono(tono) + " respondiendo: (1) QUÃ ocurre o cambia exactamente, (2) A QUIÃN afecta y cÃ³mo, (3) POR QUÃ es relevante. Si la descripciÃ³n es muy vaga, basa el resumen solo en el titular con contexto general sin inventar datos especÃ­ficos. Sin clickbait ni frases vacÃ­as.",
       "Explica en pocas palabras el contexto de esta noticia para alguien que no sigue la actualidad:\n\n" + texto, 140);
     return jsonRes({ explica: out }, 86400);
   } catch (e) { return jsonRes({ explica: "", error: String(e) }); }
@@ -314,8 +316,8 @@ async function historiar(url, env) {
   try {
     const out = await aiText(
       env,
-      "Eres un divulgador que da el trasfondo de un tema de actualidad en espaÃ±ol, " + estiloTono(tono) + ", con rigor. Cuenta de dÃ³nde viene el asunto y por quÃ© ha llegado hasta aquÃ­, sencillo y concreto. Responde en exactamente 3 frases cortas y claras, fÃ¡ciles de entender a la primera. No repitas el titular.",
-      "Da el contexto histÃ³rico y de fondo, en pocas palabras, de este tema:\n\n" + texto, 220);
+      NO_PREAMBLE + " Eres un divulgador que da el trasfondo de un tema de actualidad en espaÃ±ol, " + estiloTono(tono) + ", con rigor. Cuenta de dÃ³nde viene el asunto y por quÃ© ha llegado hasta aquÃ­, sencillo y concreto. Responde en exactamente 3 frases cortas y claras, fÃ¡ciles de entender a la primera. No repitas el titular.",
+      "Da el contexto histÃ³rico y de fondo, en pocas palabras, de este tema:\n\n" + texto, 512);
     return jsonRes({ historia: out }, 86400);
   } catch (e) { return jsonRes({ historia: "", error: String(e) }); }
 }
@@ -389,12 +391,12 @@ async function resumir(url, env) {
     } catch(e) { /* fallback to title+desc */ }
   }
 
-  const instruccion = fuenteIA !== texto
-    ? "Eres un periodista de radio. Tienes el texto completo del artÃ­culo. Escribe un resumen de 3 frases en espaÃ±ol " + estiloTono(tono) + " explicando exactamente: (1) quÃ© ocurre o cambia, (2) a quiÃ©n afecta y cÃ³mo, (3) por quÃ© es relevante. Usa solo datos del texto."
-    : "Eres un periodista de radio. Solo tienes el titular y descripciÃ³n. NO inventes datos concretos. Escribe 2-3 frases en espaÃ±ol " + estiloTono(tono) + " con lo que sabes con certeza. Si la descripciÃ³n es vaga, di lo esencial del titular con contexto general sin fabricar detalles especÃ­ficos.";
+  const instruccion = NO_PREAMBLE + " Eres un periodista de radio. " + (fuenteIA !== texto
+    ? "Tienes el texto completo del artículo. Escribe un resumen de 3 frases en espaÃ±ol " + estiloTono(tono) + " explicando exactamente: (1) quÃ© ocurre o cambia, (2) a quiÃ©n afecta y cÃ³mo, (3) por quÃ© es relevante. Usa solo datos del texto."
+    : "Solo tienes el titular y descripciÃ³n. NO inventes datos concretos. Escribe 2-3 frases en espaÃ±ol " + estiloTono(tono) + " con lo que sabes con certeza. Si la descripciÃ³n es vaga, di lo esencial del titular con contexto general sin fabricar detalles específicos.");
 
   try {
-    const out = await aiText(env, instruccion, fuenteIA);
+    const out = await aiText(env, instruccion, fuenteIA, 512);
     if (!out) return jsonRes({ texto: "" });
     let t = out.replace(/^[\s"]+|[\s"]+$/g,"").replace(/\s+/g," ").trim();
     t = t.replace(/^(Aqu[iÃ­] te (dejo|presento|ofrezco)[^:]*|A continuaci[oÃ³]n te [^:]*|Por supuesto[,!]?\s+[^:]*|Claro[,!]?\s+[^:]*|Entendido[,!]?\s+[^:]*|Resumen:)[:\s]*/i, "");
