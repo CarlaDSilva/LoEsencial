@@ -277,6 +277,12 @@ throw new Error(lastErr);
 }
 throw new Error(lastErr);
 }
+function jsonRes(obj, ttl = 0) {
+    const headers = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
+    if (ttl > 0) headers['Cache-Control'] = `public, max-age=${ttl}`;
+    return new Response(JSON.stringify(obj), { headers });
+}
+
 async function explicar(url, env) {
   const texto = (url.searchParams.get("explica") || "").slice(0, 500);
   const tono = url.searchParams.get("tono") || "calmado";
