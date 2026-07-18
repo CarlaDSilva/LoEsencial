@@ -436,7 +436,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 const cfg = store.get("loesencial_cfg", {
-  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:true, explicaAuto:false,
+  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, h,
   tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural",
   intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres","deportes"],
   fuentesSel: null,           // null = todos los medios; si no, array de ids de FEEDS
