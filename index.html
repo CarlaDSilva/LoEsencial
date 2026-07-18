@@ -935,7 +935,6 @@ function elegirVozPorDefecto(){
   const es = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith("es"));
   const pool = es.length ? es : voices;
   return pool.find(v=>/monica|paulina|m[oó]nica/i.test(v.name))
-      || pool.find(v=>!v.localService)
       || pool.find(v=>v.lang==="es-ES") || pool[0] || null;
 }
 function cargarVoces(){
@@ -944,7 +943,10 @@ function cargarVoces(){
   voz = (cfg.voiceURI && voices.find(v=>v.voiceURI===cfg.voiceURI)) || elegirVozPorDefecto();
   poblarSelectorVoces();
 }
-if(window.speechSynthesis){ speechSynthesis.addEventListener('voiceschanged', cargarVoces); cargarVoces(); }
+if(window.speechSynthesis){ speechSynthesis.addEventListener('voiceschanged', cargarVoces); cargarVoces();
+  // iOS Safari: voiceschanged may not fire; poll as fallback
+  if(!voices.length){ let _t=0; const _iv=setInterval(()=>{ cargarVoces(); if(voices.length||++_t>20) clearInterval(_iv); },200); }
+}
 
 function setLive(i){
   SEGMENTS.forEach((s,k)=>{
