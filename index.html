@@ -436,7 +436,7 @@ const store = {
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
 };
 const cfg = store.get("loesencial_cfg", {
-  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:false, explicaAuto:false,
+  dur:5, noAmargues:false, soloImportante:false, velInteligente:true, speed:1, paywall:false, voiceIA:true, explicaAuto:false,
   tono:"calmado", voiceURI:"", workerUrl:"", vozIA:"es-ES-ElviraNeural",
   intereses:["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres","deportes"],
   fuentesSel: null,           // null = todos los medios; si no, array de ids de FEEDS
@@ -445,6 +445,7 @@ const cfg = store.get("loesencial_cfg", {
   dev: false                  // modo desarrollador (toca el título de Ajustes 13 veces)
 });
 if (!Array.isArray(cfg.busquedas)) cfg.busquedas = ["argentina","galicia","vigo","morrazo","bueu","medioambiente","mujeres"];
+if(cfg.workerUrl && !cfg.voiceIA && !cfg._iaDefaulted){ cfg.voiceIA = true; cfg._iaDefaulted = 1; }
 if (!Array.isArray(cfg.intereses)) cfg.intereses = ["ciencia","tecnologia","informatica","economia","cultura","españa","vigo","galicia","morrazo","bueu","medioambiente","argentina","mujeres"];
 if (!Array.isArray(cfg.terminos)) cfg.terminos = [];
 let CATALOGO = { fuentes: [], intereses: [] };
