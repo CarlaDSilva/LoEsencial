@@ -258,69 +258,45 @@ const API_TOKEN   = (typeof globalThis !== "undefined" && globalThis.CF_AI_TOKEN
 const AZURE_REGION = (typeof globalThis !== "undefined" && globalThis.AZURE_REGION) || "";
 const AZURE_KEY    = (typeof globalThis !== "undefined" && globalThis.AZURE_KEY) || "";
 
-async function aiText(system, user, maxTokens) {
-  let lastErr = "sin respuesta";
-  for (const model of MODELS) {
-    try {
-      const resp = await fetch(
-        "https://api.cloudflare.com/client/v4/accounts/" + ACCOUNT_ID + "/ai/run/" + model,
-        {
-          method: "POST",
-          headers: { "Authorization": "Bearer " + API_TOKEN, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            messages: [{ role: "system", content: system }, { role: "user", content: user }],
-            max_tokens: maxTokens || 240,
-          }),
-        }
-      );
-      const d = await resp.json();
-      if (d.success === false || (d.errors && d.errors.length)) {
-        lastErr = JSON.stringify(d.errors || d).slice(0, 140);
-        const m = lastErr.toLowerCase();
-        // si es un problema del modelo (jubilado/no disponible), prueba el siguiente
-        if (m.includes("deprecat") || m.includes("model") || m.includes("not found") || m.includes("capacity")) continue;
-        throw new Error(lastErr);   // si es de credenciales u otro, no insistas
-      }
-      const out = ((d.result && d.result.response) || "").trim();
-      if (out) return out;
-    } catch (e) { lastErr = String(e.message || e).slice(0, 140); }
-  }
-  throw new Error(lastErr);
+async function aiText(env, system, user, maxTokens) {
+let lastErr = "sin respuesta";
+for (const model of MODELS) {
+try {
+const d = await env.AI.run(model, {
+messages: [{ role: "system", content: system }, { role: "user", content: user }],
+max_tokens: maxTokens || 240,
+});
+const out = ((d && d.response) || "").trim();
+if (out) return out;
+} catch (e) {
+lastErr = String(e.message || e).slice(0, 140);
+const m = lastErr.toLowerCase();
+if (m.includes("deprecat") || m.includes("model") || m.includes("not found") || m.includes("capacity")) continue;
+throw new Error(lastErr);
 }
-function jsonRes(obj, ttl) {
-  return new Response(JSON.stringify(obj), {
-    headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "max-age=" + (ttl || 0), ...cors() },
-  });
 }
-
-function estiloTono(tono) {
-  return ({
-    serio: "en tono serio, formal y sobrio",
-    calmado: "en tono calmado, claro y tranquilizador",
-    analitico: "en tono analítico, señalando causas y consecuencias con precisión",
-    ligero: "en tono ligero y desenfadado, fácil de escuchar",
-    ironico: "con ironía sutil e inteligente, observando lo absurdo de la situación sin faltar al rigor ni trivializar lo serio",
-  })[tono] || "en tono claro y directo";
+throw new Error(lastErr);
 }
-
-async function explicar(url) {
+async function explicar(url, env) {
   const texto = (url.searchParams.get("explica") || "").slice(0, 500);
   const tono = url.searchParams.get("tono") || "calmado";
   if (!texto) return jsonRes({ explica: "" });
   try {
     const out = await aiText(
+      env,
       "Eres un periodista de radio que resume con rigor. Usa SOLO la información del titular y descripción recibidos. NUNCA inventes cifras, fechas ni detalles no presentes en el texto. Escribe 3 frases completas en español " + estiloTono(tono) + " respondiendo: (1) QUÉ ocurre o cambia exactamente, (2) A QUIÉN afecta y cómo, (3) POR QUÉ es relevante. Si la descripción es muy vaga, basa el resumen solo en el titular con contexto general sin inventar datos específicos. Sin clickbait ni frases vacías.",
       "Explica en pocas palabras el contexto de esta noticia para alguien que no sigue la actualidad:\n\n" + texto, 140);
     return jsonRes({ explica: out }, 86400);
   } catch (e) { return jsonRes({ explica: "", error: String(e) }); }
 }
 
-async function historiar(url) {
+async function historiar(url, env) {
   const texto = (url.searchParams.get("historia") || "").slice(0, 500);
   const tono = url.searchParams.get("tono") || "calmado";
   if (!texto) return jsonRes({ historia: "" });
   try {
     const out = await aiText(
+      env,
       "Eres un divulgador que da el trasfondo de un tema de actualidad en español, " + estiloTono(tono) + ", con rigor. Cuenta de dónde viene el asunto y por qué ha llegado hasta aquí, sencillo y concreto. Responde en exactamente 3 frases cortas y claras, fáciles de entender a la primera. No repitas el titular.",
       "Da el contexto histórico y de fondo, en pocas palabras, de este tema:\n\n" + texto, 220);
     return jsonRes({ historia: out }, 86400);
@@ -341,8 +317,10 @@ const VOCES_ES = [
   "es-AR-ElenaNeural","es-AR-TomasNeural",       // Argentina
   "es-CO-SalomeNeural","es-US-PalomaNeural"      // Colombia / Latino EEUU
 ];
-async function ttsRun(texto, speaker){
-  if (!AZURE_KEY || !AZURE_REGION) throw new Error("Falta AZURE_KEY o AZURE_REGION en el Worker");
+async function ttsRun(texto, speaker, env){
+  const AZURE_KEY = env.AZURE_KEY;
+const AZURE_REGION = env.AZURE_REGION;
+if (!AZURE_KEY || !AZURE_REGION) throw new Error("Falta AZURE_KEY o AZURE_REGION en el Worker");
   const voz = VOCES_ES.includes(speaker) ? speaker : "es-ES-ElviraNeural";
   const lang = voz.slice(0,5);
   const ssml = "<speak version='1.0' xml:lang='" + lang + "'><voice xml:lang='" + lang + "' name='" + voz + "'>" + escXml(texto) + "</voice></speak>";
@@ -359,15 +337,15 @@ async function ttsRun(texto, speaker){
   if (!r.ok) { const t = await r.text().catch(()=> ""); throw new Error((r.status + " " + t).slice(0, 160)); }
   return abToB64(await r.arrayBuffer());
 }
-async function voz(url) {
+async function voz(url, env) {
   let texto = (url.searchParams.get("tts") || "").replace(/\s+/g, " ").trim().slice(0, 400);
   const speaker = url.searchParams.get("voz") || "es-ES-ElviraNeural";
   if (!texto) return jsonRes({ error: "sin texto" });
-  try { return jsonRes({ audio: await ttsRun(texto, speaker) }, 86400); }
+  try { return jsonRes({ audio: await ttsRun(texto, speaker, env) }, 86400); }
   catch (e) { return jsonRes({ error: String(e.message || e) }); }
 }
 
-async function resumir(url) {
+async function resumir(url, env) {
   const texto = (url.searchParams.get("resume") || "").slice(0, 600);
   const artUrl = url.searchParams.get("url") || "";
   const tono = url.searchParams.get("tono") || "calmado";
@@ -399,7 +377,7 @@ async function resumir(url) {
     : "Eres un periodista de radio. Solo tienes el titular y descripción. NO inventes datos concretos. Escribe 2-3 frases en español " + estiloTono(tono) + " con lo que sabes con certeza. Si la descripción es vaga, di lo esencial del titular con contexto general sin fabricar detalles específicos.";
 
   try {
-    const out = await aiText(instruccion, fuenteIA);
+    const out = await aiText(env, instruccion, fuenteIA);
     if (!out) return jsonRes({ texto: "" });
     let t = out.replace(/^[\s"]+|[\s"]+$/g,"").replace(/\s+/g," ").trim();
     t = t.replace(/^(Aqu[ií] te (dejo|presento|ofrezco)[^:]*|A continuaci[oó]n te [^:]*|Por supuesto[,!]?\s+[^:]*|Claro[,!]?\s+[^:]*|Entendido[,!]?\s+[^:]*|Resumen:)[:\s]*/i, "");
@@ -409,11 +387,13 @@ async function resumir(url) {
   }
 }
 
-addEventListener("fetch", event => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+async fetch(request, env, ctx) {
+return handleRequest(request, env);
+}
+};
 
-async function handleRequest(request) {
+async function handleRequest(request, env) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors() });
 
   const url = new URL(request.url);
